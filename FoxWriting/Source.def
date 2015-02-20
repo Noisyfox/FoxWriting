@@ -1,0 +1,26 @@
+LIBRARY
+EXPORTS
+	FWInit							@1
+	FWDrawText						@2
+	FWDrawTextEx					@3
+	FWAddFont						@4
+	FWDeleteFont					@5
+	FWSetFont						@6
+	FWEnablePixelAlignment			@7
+	FWStringWidth					@8
+	FWStringHeight					@9
+	FWStringWidthEx					@10
+	FWStringHeightEx				@11
+	FWSetHAlign						@12
+	FWSetVAlign						@13
+	FWSetLineSpacing				@14
+	FWDrawTextTransformed			@15
+	FWDrawTextTransformedEx			@16
+	FWDrawTextColor					@17
+	FWDrawTextColorEx				@18
+	FWDrawTextTransformedColor		@19
+	FWDrawTextTransformedColorEx	@20
+	FWAddFontFromFile				@21
+	FWCleanup						@22
+	FWSetFontOffset					@23
+	FWReleaseCache					@24
