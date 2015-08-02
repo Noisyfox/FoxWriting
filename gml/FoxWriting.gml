@@ -27,6 +27,7 @@ global.__NF_W_ED_AddFont = external_define(global.__NF_W_DLL, "FWAddFont", dll_s
 global.__NF_W_ED_AddFontFromFile = external_define(global.__NF_W_DLL, "FWAddFontFromFile", dll_stdcall, ty_real, 3, ty_string, ty_real, ty_real);
 global.__NF_W_ED_DeleteFont = external_define(global.__NF_W_DLL, "FWDeleteFont", dll_stdcall, ty_real, 1, ty_real);
 global.__NF_W_ED_SetFontOffset = external_define(global.__NF_W_DLL, "FWSetFontOffset", dll_stdcall, ty_real, 3, ty_real, ty_real, ty_real);
+global.__NF_W_ED_PreloadFont = external_define(global.__NF_W_DLL, "FWPreloadFont", dll_stdcall, ty_real, 3, ty_real, ty_real, ty_real);
 global.__NF_W_ED_SetFont = external_define(global.__NF_W_DLL, "FWSetFont", dll_stdcall, ty_real, 1, ty_real);
 global.__NF_W_ED_EnablePixelAlignment = external_define(global.__NF_W_DLL, "FWEnablePixelAlignment", dll_stdcall, ty_real, 1, ty_real);
 
@@ -84,6 +85,8 @@ global.__NF_W_ED_Cleanup = 0;
 global.__NF_W_ED_AddFont = 0;
 global.__NF_W_ED_AddFontFromFile = 0;
 global.__NF_W_ED_DeleteFont = 0;
+global.__NF_W_ED_SetFontOffset = 0;
+global.__NF_W_ED_PreloadFont = 0;
 global.__NF_W_ED_SetFont = 0;
 global.__NF_W_ED_EnablePixelAlignment = 0;
 
@@ -157,6 +160,15 @@ return external_call(global.__NF_W_ED_AddFontFromFile, argument0, argument1, sty
 // Returns true if success, false otherwise
 
 return external_call(global.__NF_W_ED_SetFontOffset, argument0, argument1, argument2);
+
+
+#define fw_preload_font
+// boolean fw_preload_font(int font, int from, int to)
+// Noisyfox's Writing
+// Preload characters between from and to.
+// Returns true if success, false otherwise
+
+return external_call(global.__NF_W_ED_PreloadFont, argument0, argument1, argument2);
 
 
 #define fw_delete_font

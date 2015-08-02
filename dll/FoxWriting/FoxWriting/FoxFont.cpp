@@ -30,7 +30,6 @@ FoxFont::FoxFont() :mPoint(0.0f, 0.0f)
     mFontFamily = NULL;
     mBrush = new Gdiplus::SolidBrush(Gdiplus::Color::White);
     mStrokeBrush = new Gdiplus::SolidBrush(Gdiplus::Color::Black);
-    ZeroMemory(mCacheMap, MAP_SIZE * sizeof(PFMapNode));
 }
 
 FoxFont::~FoxFont()
@@ -79,21 +78,49 @@ FoxFont::~FoxFont()
 void FoxFont::FreeCache()
 {
     // 释放缓存的texture
-    for (int i = 0; i < MAP_SIZE; i++)
+    std::unordered_map<WCHAR, PFontTexture>::iterator it = mCaches.begin();
+    while (it != mCaches.end())
     {
-        PFMapNode node = mCacheMap[i];
-        while (node != NULL)
-        {
-            PFMapNode next = node->next;
+        PFontTexture t = it->second;
+        t->texture->Release();
+        delete t;
 
-            PFontTexture t = node->texture;
-            t->texture->Release();
-            delete t;
-            delete node;
-            node = next;
+        ++it;
+    }
+
+    mCaches.clear();
+}
+
+void FoxFont::PreLoad(WCHAR from, WCHAR to)
+{
+    if(to < from)
+    {
+        return;
+    }
+
+    std::vector<std::pair<uint16_t, uint16_t>>::iterator it;
+
+    for (it = mCharacterRange.begin(); it != mCharacterRange.end(); ++it)
+    {
+        uint16_t b = it->first;
+        uint16_t e = it->second - 1;
+        
+        if(e < from)
+        {
+            continue;
+        }
+        if(b > to)
+        {
+            break;
+        }
+
+        WCHAR s = max(from, b);
+        WCHAR f = min(to, e);
+        for (WCHAR c = s; c <= f; c++)
+        {
+            GetCharTexture(c);
         }
     }
-    ZeroMemory(mCacheMap, sizeof(mCacheMap));
 }
 
 BOOL FoxFont::SetFont(WCHAR* fontName, DOUBLE size, INT style, const Gdiplus::FontCollection* fontCollection)
@@ -141,6 +168,27 @@ BOOL FoxFont::SetFont(WCHAR* fontName, DOUBLE size, INT style, const Gdiplus::Fo
     mGraphics4Measure->SetTextRenderingHint(mSizeInPoint <= 15 ? Gdiplus::TextRenderingHintClearTypeGridFit : Gdiplus::TextRenderingHintAntiAliasGridFit);
     mGraphics4Measure->SetPixelOffsetMode(Gdiplus::PixelOffsetModeHighQuality);
 
+    { // 创建 unicode 范围向量
+        HDC hdc = ::CreateCompatibleDC(NULL);
+        Gdiplus::Graphics graphics(hdc);
+        LOGFONTW logFont;
+        mFont->GetLogFontW(&graphics, &logFont);
+        HFONT hFont = ::CreateFontIndirectW(&logFont);
+        //if (!hFont) return false;
+        ::SelectObject(hdc, hFont);
+
+        DWORD glyphSize = ::GetFontUnicodeRanges(hdc, NULL);
+
+        std::vector<char> buffer(glyphSize);
+        GLYPHSET *gs = (GLYPHSET*)(&buffer[0]);
+        ::GetFontUnicodeRanges(hdc, gs);
+        for (DWORD r = 0; r < gs->cRanges; ++r) {
+            mCharacterRange.push_back(std::make_pair(gs->ranges[r].wcLow, gs->ranges[r].wcLow + gs->ranges[r].cGlyphs));
+        }
+
+        DeleteObject(hFont);
+        ReleaseDC(NULL, hdc);
+    }
 
     return TRUE;
 }
@@ -198,33 +246,20 @@ void FoxFont::SetOffset(DOUBLE xOffset, DOUBLE yOffset)
 
 PFontTexture FoxFont::GetCharTexture(WCHAR c)
 {
-    // 用当前char的值作为key，查找hashmap
-    UINT16 uc = c;
-    int index = uc % 256;
-    PFMapNode* node = &(mCacheMap[index]);
-    while ((*node) != NULL && (*node)->c != c)
+    std::unordered_map<WCHAR, PFontTexture>::iterator it = mCaches.find(c);
+    if(it == mCaches.end())
     {
-        node = &((*node)->next);
-    }
-    if ((*node) != NULL)
-    { // 缓存存在
-        return (*node)->texture;
-    }
+        PFontTexture t = GenerateCharTexture(c);
+        if (t == NULL)
+        {
+            return NULL;
+        }
+        mCaches.insert(std::unordered_map<WCHAR, PFontTexture>::value_type(c, t));
 
-    PFontTexture t = GenerateCharTexture(c);
-    if (t == NULL)
-    {
-        return NULL;
+        return t;
     }
 
-    // 储存进 hashmap
-    *node = new FMapNode();
-    ZeroMemory(*node, sizeof(FMapNode));
-
-    (*node)->c = c;
-    (*node)->texture = t;
-
-    return (*node)->texture;
+    return it->second;
 }
 
 typedef struct

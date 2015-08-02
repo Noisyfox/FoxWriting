@@ -7,6 +7,8 @@
 #include "stdafx.h"
 #include <atlbase.h>
 #include "FoxWriting.h"
+#include <vector>
+#include <unordered_map>
 
 #include <d3d8.h>
 #pragma comment (lib, "d3d8.lib")
@@ -35,13 +37,6 @@ typedef struct
     FLOAT fontYOffset;
 } FontTexture, *PFontTexture;
 
-typedef struct _FMapNode
-{
-    WCHAR c;
-    PFontTexture texture;
-    _FMapNode* next;
-} FMapNode, *PFMapNode;
-
 class FoxFont
 {
 private:
@@ -51,12 +46,14 @@ private:
     Gdiplus::FontFamily* mFontFamily;
     Gdiplus::SolidBrush* mBrush;
     Gdiplus::SolidBrush* mStrokeBrush;
-    PFMapNode mCacheMap[MAP_SIZE];
     Gdiplus::PointF mPoint;
 
     BYTE* mBitmap4Measure;
     Gdiplus::Bitmap* mBmp4Measure;
     Gdiplus::Graphics* mGraphics4Measure;
+
+    std::unordered_map<WCHAR, PFontTexture> mCaches;
+    std::vector<std::pair<uint16_t, uint16_t>> mCharacterRange;
 
     PFontTexture GenerateCharTexture(WCHAR c);
     void CreateTextBitmap(WCHAR c, int width, int height, float xOffset, float yOffset, bool stroke, BYTE* bitmap);
@@ -72,7 +69,7 @@ public:
     DOUBLE mXOffset;
     DOUBLE mYOffset;
 
-    BOOL mStroke;
+    bool mStroke;
 
     // 用一个字体和相应参数初始化该字体类
     BOOL SetFont(WCHAR* fontName, DOUBLE size, INT style, const Gdiplus::FontCollection* fontCollection = NULL);
@@ -86,6 +83,8 @@ public:
     void SetOffset(DOUBLE xOffset, DOUBLE yOffset);
 
     void FreeCache();
+
+    void PreLoad(WCHAR from, WCHAR to);
 };
 
 #endif

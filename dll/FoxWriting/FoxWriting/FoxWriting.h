@@ -40,6 +40,8 @@ extern "C"
     FOXWRITING_API DOUBLE FWAddFont(CONST CHAR* name, DOUBLE pt, DOUBLE style);
     FOXWRITING_API DOUBLE FWAddFontFromFile(CONST CHAR* ttf, DOUBLE pt, DOUBLE style);
     FOXWRITING_API DOUBLE FWDeleteFont(DOUBLE font);
+    // 预加载字体
+    FOXWRITING_API DOUBLE FWPreloadFont(DOUBLE font, DOUBLE from, DOUBLE to);
     // 设置字体偏移
     FOXWRITING_API DOUBLE FWSetFontOffset(DOUBLE font, DOUBLE xOffset, DOUBLE yOffset);
     // 设置字体

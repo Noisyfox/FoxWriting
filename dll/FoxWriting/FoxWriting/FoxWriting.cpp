@@ -7,16 +7,10 @@
 #include "FoxArgs.h"
 #include <cmath>
 #include <atlbase.h>
+#include <unordered_map>
 
 #include <d3d8.h>
 #pragma comment (lib, "d3d8.lib")
-
-typedef struct _FontNode
-{
-    int index;
-    FoxFont* font;
-    _FontNode* next;
-} FontNode, *PFontNode;
 
 // Ä¬ÈÏÐÐ¼ä¾à
 #define DEFAULT_SEP 0
@@ -27,9 +21,9 @@ ULONG_PTR m_gdiplusToken;
 INT xdpi, ydpi;
 BOOL pixelAlign = FALSE;
 INT valign, halign;
-PFontNode currentFont = NULL;
+FoxFont* currentFont = NULL;
 int fontCount = 0;
-PFontNode fontMap[MAP_SIZE];
+std::unordered_map<int, FoxFont*> fontMap;
 float lineSpacing = DEFAULT_SEP;
 
 void SetSprite(PFontTexture t)
@@ -41,8 +35,6 @@ void SetSprite(PFontTexture t)
     texture->textureHeight = t->textureHeight;
     texture->textureWidth = t->textureWidth;
     texture->isValid = 1;
-
-    //sprintf(NULL, NULL);
 
     if (gm::CGlobals::UseNewStructs())
     {
@@ -62,7 +54,7 @@ void MeasureString(WCHAR* str, Gdiplus::SizeF* size, DOUBLE sep = DEFAULT_SEP)
 {
     float w = 0, h = 0;
 
-    float lineHMax = currentFont->font->mSizeInWorld;
+    float lineHMax = currentFont->mSizeInWorld;
     float lineW = 0;
     int length = wcslen(str);
     bool rBefore = false;
@@ -76,7 +68,7 @@ void MeasureString(WCHAR* str, Gdiplus::SizeF* size, DOUBLE sep = DEFAULT_SEP)
             h += lineHMax;
             h += sep;
             w = max(w, lineW);
-            lineHMax = currentFont->font->mSizeInWorld;
+            lineHMax = currentFont->mSizeInWorld;
             lineW = 0;
         }
         else if (c == L'\n')
@@ -86,7 +78,7 @@ void MeasureString(WCHAR* str, Gdiplus::SizeF* size, DOUBLE sep = DEFAULT_SEP)
                 h += lineHMax;
                 h += sep;
                 w = max(w, lineW);
-                lineHMax = currentFont->font->mSizeInWorld;
+                lineHMax = currentFont->mSizeInWorld;
                 lineW = 0;
             }
             rBefore = false;
@@ -94,7 +86,7 @@ void MeasureString(WCHAR* str, Gdiplus::SizeF* size, DOUBLE sep = DEFAULT_SEP)
         else
         {
             rBefore = false;
-            PFontTexture t = currentFont->font->GetCharTexture(c);
+            PFontTexture t = currentFont->GetCharTexture(c);
             if (t != NULL)
             {
                 lineW += t->fontWidth;
@@ -126,7 +118,7 @@ void MeasureString(WCHAR* str, Gdiplus::SizeF* size, DOUBLE sep, DOUBLE w)
     int length = wcslen(str);
 
     float currentLineWidth = 0;
-    float lineHMax = currentFont->font->mSizeInWorld;
+    float lineHMax = currentFont->mSizeInWorld;
     bool rBefore = false;
 
     for (int i = 0; i < length; i++)
@@ -139,7 +131,7 @@ void MeasureString(WCHAR* str, Gdiplus::SizeF* size, DOUBLE sep, DOUBLE w)
             height += sep;
             height += lineHMax;
 
-            lineHMax = currentFont->font->mSizeInWorld;
+            lineHMax = currentFont->mSizeInWorld;
             currentLineWidth = 0;
         }
         else if (c == L'\n')
@@ -150,7 +142,7 @@ void MeasureString(WCHAR* str, Gdiplus::SizeF* size, DOUBLE sep, DOUBLE w)
                 height += sep;
                 height += lineHMax;
 
-                lineHMax = currentFont->font->mSizeInWorld;
+                lineHMax = currentFont->mSizeInWorld;
                 currentLineWidth = 0;
             }
             rBefore = false;
@@ -158,7 +150,7 @@ void MeasureString(WCHAR* str, Gdiplus::SizeF* size, DOUBLE sep, DOUBLE w)
         else
         {
             rBefore = false;
-            PFontTexture t = currentFont->font->GetCharTexture(c);
+            PFontTexture t = currentFont->GetCharTexture(c);
             if (t != NULL)
             {
                 float newWidth = currentLineWidth + t->fontWidth;
@@ -168,7 +160,7 @@ void MeasureString(WCHAR* str, Gdiplus::SizeF* size, DOUBLE sep, DOUBLE w)
                     height += sep;
                     height += lineHMax;
 
-                    lineHMax = max(currentFont->font->mSizeInWorld, t->fontHeight);
+                    lineHMax = max(currentFont->mSizeInWorld, t->fontHeight);
                     currentLineWidth = t->fontWidth;
                 }
                 else
@@ -188,7 +180,7 @@ void MeasureString(WCHAR* str, Gdiplus::SizeF* size, DOUBLE sep, DOUBLE w)
 
 FLOAT DrawLine(WCHAR* str, int start, int end, DOUBLE xOrig, DOUBLE yOrig, DOUBLE x, DOUBLE y, DOUBLE xscale, DOUBLE yscale, DOUBLE angle, DOUBLE alpha, FLOAT measuredWidth, int color1, int color2)
 {
-    float lineHeight = currentFont->font->mSizeInWorld;
+    float lineHeight = currentFont->mSizeInWorld;
 
     if (halign == gm::fa_center)
     {
@@ -201,12 +193,12 @@ FLOAT DrawLine(WCHAR* str, int start, int end, DOUBLE xOrig, DOUBLE yOrig, DOUBL
 
     for (int i = start; i < end; i++)
     {
-        PFontTexture t = currentFont->font->GetCharTexture(str[i]);
+        PFontTexture t = currentFont->GetCharTexture(str[i]);
         if (t != NULL)
         {
             SetSprite(t);
-            double xOffset = x - xOrig - t->fontXOffset + currentFont->font->mXOffset;
-            double yOffset = y - yOrig - t->fontYOffset + currentFont->font->mYOffset;
+            double xOffset = x - xOrig - t->fontXOffset + currentFont->mXOffset;
+            double yOffset = y - yOrig - t->fontYOffset + currentFont->mYOffset;
             double rotInRad = angle / 360.0 * M_PI * 2;
 
             double x0 = xOffset * xscale;
@@ -287,7 +279,7 @@ inline DOUBLE DrawTextInner(DOUBLE x, DOUBLE y, CONST CHAR* str, DOUBLE w, DOUBL
         else
         {
             rBefore = false;
-            PFontTexture t = currentFont->font->GetCharTexture(c);
+            PFontTexture t = currentFont->GetCharTexture(c);
             if (t != NULL)
             {
                 float newWidth = lineWidth + t->fontWidth;
@@ -373,8 +365,6 @@ DOUBLE FWInit(DOUBLE sprite)
         return FALSE;
     }
 
-    ZeroMemory(fontMap, sizeof(fontMap));
-
     pixelAlign = FALSE;
     halign = gm::fa_left;
     valign = gm::fa_top;
@@ -386,17 +376,13 @@ DOUBLE FWReleaseCache()
 {
     Restore();
     // release all texture
-    for (int i = 0; i < MAP_SIZE; i++)
+    std::unordered_map<int, FoxFont*>::iterator it = fontMap.begin();
+    while (it != fontMap.end())
     {
-        PFontNode node = fontMap[i];
-        while (node != NULL)
-        {
-            PFontNode next = node->next;
+        FoxFont* f = it->second;
+        f->FreeCache();
 
-            FoxFont* f = node->font;
-            f->FreeCache();
-            node = next;
-        }
+        ++it;
     }
     return TRUE;
 }
@@ -407,20 +393,15 @@ DOUBLE FWCleanup()
     currentFont = NULL;
 
     // cleanup all fonts
-    for (int i = 0; i < MAP_SIZE; i++)
+    std::unordered_map<int, FoxFont*>::iterator it = fontMap.begin();
+    while (it != fontMap.end())
     {
-        PFontNode node = fontMap[i];
-        while (node != NULL)
-        {
-            PFontNode next = node->next;
+        FoxFont* f = it->second;
+        delete f;
 
-            FoxFont* f = node->font;
-            delete f;
-            delete node;
-            node = next;
-        }
+        ++it;
     }
-    ZeroMemory(fontMap, sizeof(fontMap));
+    fontMap.clear();
 
     return TRUE;
 }
@@ -622,19 +603,7 @@ DOUBLE FWAddFont(CONST CHAR* name, DOUBLE pt, DOUBLE style)
     int index = fontCount;
     fontCount++;
 
-    int mIndex = index % 256;
-
-    PFontNode node = new FontNode;
-    if (node == NULL)
-    {
-        delete font;
-        return -1;
-    }
-
-    node->index = index;
-    node->font = font;
-    node->next = fontMap[mIndex];
-    fontMap[mIndex] = node;
+    fontMap[index] = font;
 
     return index;
 }
@@ -659,19 +628,7 @@ DOUBLE FWAddFontFromFile(CONST CHAR* ttf, DOUBLE pt, DOUBLE style)
     int index = fontCount;
     fontCount++;
 
-    int mIndex = index % 256;
-
-    PFontNode node = new FontNode;
-    if (node == NULL)
-    {
-        delete font;
-        return -1;
-    }
-
-    node->index = index;
-    node->font = font;
-    node->next = fontMap[mIndex];
-    fontMap[mIndex] = node;
+    fontMap[index] = font;
 
     return index;
 }
@@ -683,21 +640,13 @@ DOUBLE FWSetFontOffset(DOUBLE font, DOUBLE xOffset, DOUBLE yOffset)
         return FALSE;
     }
 
-    int index = (int)font;
-    int mIndex = index % 256;
-
-    PFontNode node = fontMap[mIndex];
-    while (node != NULL && node->index != index)
-    {
-        node = node->next;
-    }
-
-    if (node == NULL)
+    std::unordered_map<int, FoxFont*>::iterator it = fontMap.find((int)font);
+    if (it == fontMap.end())
     {
         return FALSE;
     }
 
-    node->font->SetOffset(xOffset, yOffset);
+    it->second->SetOffset(xOffset, yOffset);
 
     return TRUE;
 }
@@ -709,21 +658,13 @@ DOUBLE FWSetFont(DOUBLE font)
         return FALSE;
     }
 
-    int index = (int)font;
-    int mIndex = index % 256;
-
-    PFontNode node = fontMap[mIndex];
-    while (node != NULL && node->index != index)
-    {
-        node = node->next;
-    }
-
-    if (node == NULL)
+    std::unordered_map<int, FoxFont*>::iterator it = fontMap.find((int)font);
+    if (it == fontMap.end())
     {
         return FALSE;
     }
 
-    currentFont = node;
+    currentFont = it->second;
 
     return TRUE;
 }
@@ -735,31 +676,22 @@ DOUBLE FWDeleteFont(DOUBLE font)
         return FALSE;
     }
 
-    int index = (int)font;
-    int mIndex = index % 256;
-
-    for (PFontNode* curr = &fontMap[mIndex]; *curr;)
+    std::unordered_map<int, FoxFont*>::iterator it = fontMap.find((int)font);
+    if (it == fontMap.end())
     {
-        PFontNode entry = *curr;
-        if (entry->index == index)
-        {
-            *curr = entry->next;
-
-            if (currentFont == entry)
-            {
-                currentFont = NULL;
-            }
-            delete entry->font;
-            delete entry;
-            return TRUE;
-        }
-        else
-        {
-            curr = &entry->next;
-        }
+        return FALSE;
     }
 
-    return FALSE;
+    FoxFont* f = it->second;
+    if(currentFont == f)
+    {
+        currentFont = NULL;
+    }
+
+    delete f;
+    fontMap.erase(it);
+
+    return TRUE;
 }
 
 DOUBLE FWEnablePixelAlignment(DOUBLE enable)
@@ -833,6 +765,24 @@ DOUBLE FWStringHeightEx(CONST CHAR* str, DOUBLE sep, DOUBLE w)
 DOUBLE FWSetLineSpacing(DOUBLE sep)
 {
     lineSpacing = sep < 0 ? DEFAULT_SEP : (float)sep;
+
+    return TRUE;
+}
+
+DOUBLE FWPreloadFont(DOUBLE font, DOUBLE from, DOUBLE to)
+{
+    if (font < 0)
+    {
+        return FALSE;
+    }
+
+    std::unordered_map<int, FoxFont*>::iterator it = fontMap.find((int)font);
+    if (it == fontMap.end())
+    {
+        return FALSE;
+    }
+
+    it->second->PreLoad((WCHAR)from, (WCHAR)to);
 
     return TRUE;
 }

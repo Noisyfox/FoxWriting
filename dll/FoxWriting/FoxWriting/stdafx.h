@@ -22,6 +22,3 @@
 #include <GdiPlus.h>
 //using namespace Gdiplus;
 #pragma comment(lib, "Gdiplus")
-
-// ÄÚ²¿hashmapµÄ³ß´ç
-#define MAP_SIZE 256
