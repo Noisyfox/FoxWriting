@@ -358,7 +358,13 @@ PFontTexture FoxFont::GenerateCharTexture(const WCHAR c)
     texture->fontYOffset = -stringRect.GetTop();
 
     // ×¼±¸bitmap
-    size_t size = texture->textureWidth * texture->textureHeight * 4;
+    int size = texture->textureWidth * texture->textureHeight * 4;
+    if(size <= 0)
+    {
+        delete texture;
+        return NULL;
+    }
+
     BYTE* bitmap = new BYTE[size];
     if (bitmap == NULL)
     {
