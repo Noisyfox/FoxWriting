@@ -10,8 +10,6 @@
 
 #include <d3d8.h>
 #pragma comment (lib, "d3d8.lib")
-#include <d3dx8.h>
-#pragma comment (lib, "d3dx8.lib")
 
 typedef struct _FontNode{
 	int index;
@@ -41,6 +39,8 @@ void SetSprite(PFontTexture t){
 	texture->textureHeight = t->textureHeight;
 	texture->textureWidth = t->textureWidth;
 	texture->isValid = 1;
+
+    //sprintf(NULL, NULL);
 
 	if (gm::CGlobals::UseNewStructs()){
 		gm::PGMBITMAP_NEW b = &workbench.workingSprite->GetPtr()->structNew.bitmaps[0]->structNew;
@@ -297,7 +297,7 @@ void Restore()
 	}
 }
 
-FOXWRITING_API DOUBLE FWInit(DOUBLE sprite)
+DOUBLE FWInit(DOUBLE sprite)
 {
 	int _spr = (int)sprite;
 	if (!gmapi->Sprites.Exists(_spr))return FALSE;
@@ -337,7 +337,7 @@ FOXWRITING_API DOUBLE FWInit(DOUBLE sprite)
 	return TRUE;
 }
 
-FOXWRITING_API DOUBLE FWReleaseCache()
+DOUBLE FWReleaseCache()
 {
 	Restore();
 	// release all texture
@@ -354,7 +354,7 @@ FOXWRITING_API DOUBLE FWReleaseCache()
 	return TRUE;
 }
 
-FOXWRITING_API DOUBLE FWCleanup(){
+DOUBLE FWCleanup(){
 	Restore();
 	currentFont = NULL;
 
@@ -375,17 +375,17 @@ FOXWRITING_API DOUBLE FWCleanup(){
 	return TRUE;
 }
 
-FOXWRITING_API DOUBLE FWSetHAlign(DOUBLE align){
+DOUBLE FWSetHAlign(DOUBLE align){
 	halign = align;
 	return TRUE;
 }
 
-FOXWRITING_API DOUBLE FWSetVAlign(DOUBLE align){
+DOUBLE FWSetVAlign(DOUBLE align){
 	valign = align;
 	return TRUE;
 }
 
-FOXWRITING_API DOUBLE FWDrawText(DOUBLE x, DOUBLE y, CONST CHAR* str)
+DOUBLE FWDrawText(DOUBLE x, DOUBLE y, CONST CHAR* str)
 {
 	if (currentFont == NULL){
 		return FALSE;
@@ -396,7 +396,7 @@ FOXWRITING_API DOUBLE FWDrawText(DOUBLE x, DOUBLE y, CONST CHAR* str)
 	return DrawTextInner(x, y, str, 0, 1, 1, 0, alpha, color, color);
 }
 
-FOXWRITING_API DOUBLE FWDrawTextEx(DOUBLE x, DOUBLE y, CONST CHAR* str, CONST CHAR* args){
+DOUBLE FWDrawTextEx(DOUBLE x, DOUBLE y, CONST CHAR* str, CONST CHAR* args){
 	if (currentFont == NULL){
 		return FALSE;
 	}
@@ -413,7 +413,7 @@ FOXWRITING_API DOUBLE FWDrawTextEx(DOUBLE x, DOUBLE y, CONST CHAR* str, CONST CH
 	return DrawTextInner(x, y, str, w, 1, 1, 0, alpha, color, color);
 }
 
-FOXWRITING_API DOUBLE FWDrawTextTransformed(DOUBLE x, DOUBLE y, CONST CHAR* str, CONST CHAR* args)
+DOUBLE FWDrawTextTransformed(DOUBLE x, DOUBLE y, CONST CHAR* str, CONST CHAR* args)
 {
 	if (currentFont == NULL){
 		return FALSE;
@@ -433,7 +433,7 @@ FOXWRITING_API DOUBLE FWDrawTextTransformed(DOUBLE x, DOUBLE y, CONST CHAR* str,
 	return DrawTextInner(x, y, str, 0, xscale, yscale, angle, alpha, color, color);
 }
 
-FOXWRITING_API DOUBLE FWDrawTextTransformedEx(DOUBLE x, DOUBLE y, CONST CHAR* str, CONST CHAR* args)
+DOUBLE FWDrawTextTransformedEx(DOUBLE x, DOUBLE y, CONST CHAR* str, CONST CHAR* args)
 {
 	if (currentFont == NULL){
 		return FALSE;
@@ -454,7 +454,7 @@ FOXWRITING_API DOUBLE FWDrawTextTransformedEx(DOUBLE x, DOUBLE y, CONST CHAR* st
 	return DrawTextInner(x, y, str, w, xscale, yscale, angle, alpha, color, color);
 }
 
-FOXWRITING_API DOUBLE FWDrawTextColor(DOUBLE x, DOUBLE y, CONST CHAR* str, CONST CHAR* args)
+DOUBLE FWDrawTextColor(DOUBLE x, DOUBLE y, CONST CHAR* str, CONST CHAR* args)
 {
 	if (currentFont == NULL){
 		return FALSE;
@@ -472,7 +472,7 @@ FOXWRITING_API DOUBLE FWDrawTextColor(DOUBLE x, DOUBLE y, CONST CHAR* str, CONST
 	return DrawTextInner(x, y, str, 0, 1, 1, 0, alpha, color1, color2);
 }
 
-FOXWRITING_API DOUBLE FWDrawTextColorEx(DOUBLE x, DOUBLE y, CONST CHAR* str, CONST CHAR* args)
+DOUBLE FWDrawTextColorEx(DOUBLE x, DOUBLE y, CONST CHAR* str, CONST CHAR* args)
 {
 	if (currentFont == NULL){
 		return FALSE;
@@ -491,7 +491,7 @@ FOXWRITING_API DOUBLE FWDrawTextColorEx(DOUBLE x, DOUBLE y, CONST CHAR* str, CON
 	return DrawTextInner(x, y, str, w, 1, 1, 0, alpha, color1, color2);
 }
 
-FOXWRITING_API DOUBLE FWDrawTextTransformedColor(DOUBLE x, DOUBLE y, CONST CHAR* str, CONST CHAR* args)
+DOUBLE FWDrawTextTransformedColor(DOUBLE x, DOUBLE y, CONST CHAR* str, CONST CHAR* args)
 {
 	if (currentFont == NULL){
 		return FALSE;
@@ -512,7 +512,7 @@ FOXWRITING_API DOUBLE FWDrawTextTransformedColor(DOUBLE x, DOUBLE y, CONST CHAR*
 	return DrawTextInner(x, y, str, 0, xscale, yscale, angle, alpha, color1, color2);
 }
 
-FOXWRITING_API DOUBLE FWDrawTextTransformedColorEx(DOUBLE x, DOUBLE y, CONST CHAR* str, CONST CHAR* args)
+DOUBLE FWDrawTextTransformedColorEx(DOUBLE x, DOUBLE y, CONST CHAR* str, CONST CHAR* args)
 {
 	if (currentFont == NULL){
 		return FALSE;
@@ -534,7 +534,7 @@ FOXWRITING_API DOUBLE FWDrawTextTransformedColorEx(DOUBLE x, DOUBLE y, CONST CHA
 	return DrawTextInner(x, y, str, w, xscale, yscale, angle, alpha, color1, color2);
 }
 
-FOXWRITING_API DOUBLE FWAddFont(CONST CHAR* name, DOUBLE pt, DOUBLE style){
+DOUBLE FWAddFont(CONST CHAR* name, DOUBLE pt, DOUBLE style){
 	if (pt <= 0){
 		return -1;
 	}
@@ -567,7 +567,7 @@ FOXWRITING_API DOUBLE FWAddFont(CONST CHAR* name, DOUBLE pt, DOUBLE style){
 	return index;
 }
 
-FOXWRITING_API DOUBLE FWAddFontFromFile(CONST CHAR* ttf, DOUBLE pt, DOUBLE style){
+DOUBLE FWAddFontFromFile(CONST CHAR* ttf, DOUBLE pt, DOUBLE style){
 	if (pt <= 0){
 		return -1;
 	}
@@ -600,7 +600,7 @@ FOXWRITING_API DOUBLE FWAddFontFromFile(CONST CHAR* ttf, DOUBLE pt, DOUBLE style
 	return index;
 }
 
-FOXWRITING_API DOUBLE FWSetFontOffset(DOUBLE font, DOUBLE xOffset, DOUBLE yOffset){
+DOUBLE FWSetFontOffset(DOUBLE font, DOUBLE xOffset, DOUBLE yOffset){
 	if (font < 0){
 		return FALSE;
 	}
@@ -622,7 +622,7 @@ FOXWRITING_API DOUBLE FWSetFontOffset(DOUBLE font, DOUBLE xOffset, DOUBLE yOffse
 	return TRUE;
 }
 
-FOXWRITING_API DOUBLE FWSetFont(DOUBLE font){
+DOUBLE FWSetFont(DOUBLE font){
 	if (font < 0){
 		return FALSE;
 	}
@@ -644,7 +644,7 @@ FOXWRITING_API DOUBLE FWSetFont(DOUBLE font){
 	return TRUE;
 }
 
-FOXWRITING_API DOUBLE FWDeleteFont(DOUBLE font){
+DOUBLE FWDeleteFont(DOUBLE font){
 	if (font < 0){
 		return FALSE;
 	}
@@ -674,14 +674,14 @@ FOXWRITING_API DOUBLE FWDeleteFont(DOUBLE font){
 	return FALSE;
 }
 
-FOXWRITING_API DOUBLE FWEnablePixelAlignment(DOUBLE enable){
+DOUBLE FWEnablePixelAlignment(DOUBLE enable){
 	int en = (int)enable;
 	pixelAlign = en;
 
 	return TRUE;
 }
 
-FOXWRITING_API DOUBLE FWStringWidth(CONST CHAR* str){
+DOUBLE FWStringWidth(CONST CHAR* str){
 	if (currentFont == NULL){
 		return 0;
 	}
@@ -694,7 +694,7 @@ FOXWRITING_API DOUBLE FWStringWidth(CONST CHAR* str){
 	return size.Width;
 }
 
-FOXWRITING_API DOUBLE FWStringHeight(CONST CHAR* str){
+DOUBLE FWStringHeight(CONST CHAR* str){
 	if (currentFont == NULL){
 		return 0;
 	}
@@ -707,7 +707,7 @@ FOXWRITING_API DOUBLE FWStringHeight(CONST CHAR* str){
 	return size.Height;
 }
 
-FOXWRITING_API DOUBLE FWStringWidthEx(CONST CHAR* str, DOUBLE sep, DOUBLE w){
+DOUBLE FWStringWidthEx(CONST CHAR* str, DOUBLE sep, DOUBLE w){
 	if (currentFont == NULL){
 		return 0;
 	}
@@ -720,7 +720,7 @@ FOXWRITING_API DOUBLE FWStringWidthEx(CONST CHAR* str, DOUBLE sep, DOUBLE w){
 	return size.Width;
 }
 
-FOXWRITING_API DOUBLE FWStringHeightEx(CONST CHAR* str, DOUBLE sep, DOUBLE w){
+DOUBLE FWStringHeightEx(CONST CHAR* str, DOUBLE sep, DOUBLE w){
 	if (currentFont == NULL){
 		return 0;
 	}
@@ -733,7 +733,7 @@ FOXWRITING_API DOUBLE FWStringHeightEx(CONST CHAR* str, DOUBLE sep, DOUBLE w){
 	return size.Height;
 }
 
-FOXWRITING_API DOUBLE FWSetLineSpacing(DOUBLE sep){
+DOUBLE FWSetLineSpacing(DOUBLE sep){
 	lineSpacing = sep < 0 ? DEFAULT_SEP : sep;
 
 	return TRUE;

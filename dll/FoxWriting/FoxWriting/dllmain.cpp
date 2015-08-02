@@ -11,6 +11,12 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 	{
 	case DLL_PROCESS_ATTACH:
 	{
+
+        { // 应对 vs2015 内联 sprintf 导致 d3d8.lib 找不到 _sprintf 的问题
+            char f__kInline[1];
+            sprintf(f__kInline, "");
+        }
+
 		// Initializing GMAPI library
 		DWORD result = 0;
 		gmapi = gm::CGMAPI::Create(&result);
