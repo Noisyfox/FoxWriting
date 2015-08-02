@@ -9,36 +9,40 @@
 #include "stdafx.h"
 #include <cstring>
 
-template<int _Size>
-int ParseArgs(CONST CHAR* args, DOUBLE (&dst)[_Size]){
-	int len = strlen(args);
-	int index = 0;
+template <int _Size>
+int ParseArgs(CONST CHAR* args, DOUBLE (&dst)[_Size])
+{
+    int len = strlen(args);
+    int index = 0;
 
-	char * str = new char[len + 2];
-	if (str == NULL){
-		return 0;
-	}
+    char* str = new char[len + 2];
+    if (str == NULL)
+    {
+        return 0;
+    }
 
-	strncpy_s(str, (len + 2) * sizeof(char), args, len);
-	str[len] = ';';
-	str[len + 1] = '\0';
+    strncpy_s(str, (len + 2) * sizeof(char), args, len);
+    str[len] = ';';
+    str[len + 1] = '\0';
 
-	len++;
+    len++;
 
-	char* strP = str;
-	for (int i = 0; i < len && index < _Size; i++){
-		if (str[i] == ';'){
-			str[i] = '\0';
-			double v = atof(strP);
-			strP = &str[i + 1];
-			dst[index] = v;
-			index++;
-		}
-	}
+    char* strP = str;
+    for (int i = 0; i < len && index < _Size; i++)
+    {
+        if (str[i] == ';')
+        {
+            str[i] = '\0';
+            double v = atof(strP);
+            strP = &str[i + 1];
+            dst[index] = v;
+            index++;
+        }
+    }
 
-	delete[] str;
+    delete[] str;
 
-	return index;
+    return index;
 }
 
 #endif
