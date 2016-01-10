@@ -31,7 +31,7 @@ FoxFont::FoxFont() :mPoint(0.0f, 0.0f)
     mBrush = new Gdiplus::SolidBrush(Gdiplus::Color::White);
     mStrokeBrush = new Gdiplus::SolidBrush(Gdiplus::Color::Black);
 
-    mDebugPen = new Gdiplus::Pen(Gdiplus::Color::Red);
+    // mDebugPen = new Gdiplus::Pen(Gdiplus::Color::Red);
 }
 
 FoxFont::~FoxFont()
