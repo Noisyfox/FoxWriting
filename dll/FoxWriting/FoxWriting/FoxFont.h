@@ -47,6 +47,7 @@ private:
     Gdiplus::SolidBrush* mBrush;
     Gdiplus::SolidBrush* mStrokeBrush;
     Gdiplus::PointF mPoint;
+    Gdiplus::Pen* mDebugPen;
 
     BYTE* mBitmap4Measure;
     Gdiplus::Bitmap* mBmp4Measure;

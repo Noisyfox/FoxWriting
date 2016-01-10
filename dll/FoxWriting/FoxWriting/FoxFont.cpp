@@ -30,6 +30,8 @@ FoxFont::FoxFont() :mPoint(0.0f, 0.0f)
     mFontFamily = NULL;
     mBrush = new Gdiplus::SolidBrush(Gdiplus::Color::White);
     mStrokeBrush = new Gdiplus::SolidBrush(Gdiplus::Color::Black);
+
+    mDebugPen = new Gdiplus::Pen(Gdiplus::Color::Red);
 }
 
 FoxFont::~FoxFont()
@@ -58,6 +60,10 @@ FoxFont::~FoxFont()
     {
         delete mStrokeBrush;
     }
+    // if (mDebugPen)
+    // {
+    //     delete mDebugPen;
+    // }
     if (mGraphics4Measure)
     {
         delete mGraphics4Measure;
@@ -333,8 +339,8 @@ PFontTexture FoxFont::GenerateCharTexture(const WCHAR c)
     MeasureChar(c, &stringRect);
 
     Gdiplus::REAL x, y, w, h;
-    x = stringRect.GetLeft() - 1;
-    y = stringRect.GetTop() - 1;
+    x = stringRect.GetLeft() - 2;
+    y = stringRect.GetTop() - 2;
     w = stringRect.Width + 4;
     h = stringRect.Height + 4;
 
@@ -413,6 +419,7 @@ void FoxFont::CreateTextBitmap(WCHAR c, int width, int height, float xOffset, fl
     if (stroke)
     {
         g.Clear(Gdiplus::Color::Transparent);
+        // g.DrawRectangle(mDebugPen, 0, 0, width - 1, height - 1);
 
         g.SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
         g.SetTextRenderingHint(mSizeInPoint <= 20 ? Gdiplus::TextRenderingHintClearTypeGridFit : Gdiplus::TextRenderingHintAntiAliasGridFit);
@@ -437,6 +444,7 @@ void FoxFont::CreateTextBitmap(WCHAR c, int width, int height, float xOffset, fl
     else
     {
         g.Clear(Gdiplus::Color::Black);
+        // g.DrawRectangle(mDebugPen, 0, 0, width - 1, height - 1);
 
         g.SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
         g.SetTextRenderingHint(mSizeInPoint <= 20 ? Gdiplus::TextRenderingHintClearTypeGridFit : Gdiplus::TextRenderingHintAntiAliasGridFit);
@@ -463,6 +471,7 @@ BOOL FoxFont::MeasureChar(WCHAR c, Gdiplus::RectF* bound)
 	g.SetTextRenderingHint(mSizeInPoint <= 15 ? Gdiplus::TextRenderingHintClearTypeGridFit : Gdiplus::TextRenderingHintAntiAliasGridFit);
 	g.SetPixelOffsetMode(Gdiplus::PixelOffsetModeHighQuality);
 	*/
+    //MessageBox(nullptr, _T("aaa"), nullptr, 0);
 
     Gdiplus::PointF origin(0, 0);
     Gdiplus::RectF tmpRect1(0, 0, 0, 0);
@@ -480,12 +489,14 @@ BOOL FoxFont::MeasureChar(WCHAR c, Gdiplus::RectF* bound)
     path1.GetBounds(&tmpRect3);
 
     FLOAT w = tmpRect2.Width - tmpRect1.Width * 2;
-    FLOAT h = tmpRect2.Height;
+    FLOAT h = tmpRect3.Height;
 
-    bound->Width = w;
-    bound->Height = mSizeInWorld;
-    bound->X = ceil(tmpRect3.X - w / 5.0f);
-    bound->Y = ceil(tmpRect3.Y - h / 5.0f);
+    // bound->Width = w;
+    // bound->Height = h;
+    bound->X = ceil(tmpRect3.X / 2);//ceil(tmpRect3.X - w / 5.0f);
+    bound->Y = ceil(tmpRect3.Y / 2);//ceil(tmpRect3.Y - h / 5.0f);
+    bound->Width = w + bound->X;
+    bound->Height = h + bound->Y;
 
     return TRUE;
 }

@@ -1,5 +1,5 @@
 #define fw_init
-//void fw_init(sprite)
+//void fw_init()
 // Noisyfox's Writing
 // Initialize the variables using by these script.
 
@@ -53,7 +53,7 @@ global.__NF_W_ED_DrawTextColorExt = external_define(global.__NF_W_DLL, "FWDrawTe
 global.__NF_W_ED_DrawTextTransformedColor = external_define(global.__NF_W_DLL, "FWDrawTextTransformedColor", dll_stdcall, ty_real, 4, ty_real, ty_real, ty_string, ty_string);
 global.__NF_W_ED_DrawTextTransformedColorExt = external_define(global.__NF_W_DLL, "FWDrawTextTransformedColorEx", dll_stdcall, ty_real, 4, ty_real, ty_real, ty_string, ty_string);
 
-result = external_call(global.__NF_W_ED_Init, argument0);
+result = external_call(global.__NF_W_ED_Init, sprite_create_from_screen(0,0,1,1,false,false,0,0));
 
 if(!result){
     show_error("FowWriting ≥ı ºªØ ß∞‹£°", true);
