@@ -1,0 +1,10 @@
+*~
+Debug
+Release
+working/
+*ipch
+*.sdf
+.vs
+*.opendb
+*.swp
+

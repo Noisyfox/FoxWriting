@@ -5,6 +5,7 @@
 #include "FoxWriting.h"
 #include "FoxFont.h"
 #include "FoxArgs.h"
+#include "CodePage.h"
 #include <cmath>
 #include <unordered_map>
 
@@ -24,7 +25,7 @@ FoxFont* currentFont = NULL;
 int fontCount = 0;
 std::unordered_map<int, FoxFont*> fontMap;
 float lineSpacing = DEFAULT_SEP;
-UINT codePage = CP_ACP;
+UINT currentCodePage = CP_ACP;
 
 int iEncodeBufferSize = 0;
 LPWSTR strEncodeBuffer = nullptr;
@@ -33,7 +34,7 @@ LPWSTR strEncodeBuffer = nullptr;
 inline LPCWSTR MultibyteToWildChar(LPCSTR input)
 {
     //计算字符串 string 转成 wchar_t 之后占用的内存字节数
-    int nBufSize = MultiByteToWideChar(codePage, 0, input, -1, nullptr, 0);
+    int nBufSize = MultiByteToWideChar(currentCodePage, 0, input, -1, nullptr, 0);
 
     if(nBufSize <= 0)
     {
@@ -60,7 +61,7 @@ inline LPCWSTR MultibyteToWildChar(LPCSTR input)
     }
 
     //转化为 unicode 的 WideString
-    int nSize = MultiByteToWideChar(codePage, 0, input, -1, strEncodeBuffer, nBufSize);
+    int nSize = MultiByteToWideChar(currentCodePage, 0, input, -1, strEncodeBuffer, nBufSize);
 
     return nSize > 0 ? strEncodeBuffer : nullptr;
 }
@@ -455,14 +456,36 @@ DOUBLE FWCleanup()
     return TRUE;
 }
 
+inline DOUBLE SetEncoding(UINT codePage)
+{
+    if (IsValidCodePage(codePage) == 0)
+    {
+        return FALSE;
+    }
+
+    currentCodePage = codePage;
+    return TRUE;
+}
+
 DOUBLE FWSetEncoding(LPCSTR CPName)
 {
-    return TRUE;
+    PCodePage cp = g_pCodePages;
+    while(cp->code_page != 0)
+    {
+        if(strcmp(CPName, cp->name) == 0)
+        {
+            return SetEncoding(cp->code_page);
+        }
+        cp++;
+    }
+    return FALSE;
 }
 
 DOUBLE FWSetEncodingEx(DOUBLE codePage)
 {
-    return TRUE;
+    UINT CP = (UINT)codePage;
+
+    return SetEncoding(CP);
 }
 
 DOUBLE FWSetHAlign(DOUBLE align)
