@@ -458,7 +458,7 @@ DOUBLE FWCleanup()
 
 inline DOUBLE SetEncoding(UINT codePage)
 {
-    if (IsValidCodePage(codePage) == 0)
+    if (codePage != 0 && IsValidCodePage(codePage) == 0)
     {
         return FALSE;
     }

@@ -24,7 +24,7 @@ global.__NF_W_ED_ReleaseCache = external_define(global.__NF_W_DLL, "FWReleaseCac
 global.__NF_W_ED_Cleanup = external_define(global.__NF_W_DLL, "FWCleanup", dll_stdcall, ty_real, 0);
 
 global.__NF_W_ED_SetEncoding = external_define(global.__NF_W_DLL, "FWSetEncoding", dll_stdcall, ty_real, 1, ty_string);
-global.__NF_W_ED_SetEncodingEx = external_define(global.__NF_W_DLL, "FWSetEncodingEx", dll_stdcall, ty_real, 1, ty_real);
+global.__NF_W_ED_SetEncodingExt = external_define(global.__NF_W_DLL, "FWSetEncodingEx", dll_stdcall, ty_real, 1, ty_real);
 
 global.__NF_W_ED_AddFont = external_define(global.__NF_W_DLL, "FWAddFont", dll_stdcall, ty_real, 3, ty_string, ty_real, ty_real);
 global.__NF_W_ED_AddFontFromFile = external_define(global.__NF_W_DLL, "FWAddFontFromFile", dll_stdcall, ty_real, 3, ty_string, ty_real, ty_real);
