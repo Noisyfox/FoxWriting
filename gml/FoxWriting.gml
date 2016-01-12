@@ -23,6 +23,9 @@ global.__NF_W_ED_Init = external_define(global.__NF_W_DLL, "FWInit", dll_stdcall
 global.__NF_W_ED_ReleaseCache = external_define(global.__NF_W_DLL, "FWReleaseCache", dll_stdcall, ty_real, 0);
 global.__NF_W_ED_Cleanup = external_define(global.__NF_W_DLL, "FWCleanup", dll_stdcall, ty_real, 0);
 
+global.__NF_W_ED_SetEncoding = external_define(global.__NF_W_DLL, "FWSetEncoding", dll_stdcall, ty_real, 1, ty_string);
+global.__NF_W_ED_SetEncodingEx = external_define(global.__NF_W_DLL, "FWSetEncodingEx", dll_stdcall, ty_real, 1, ty_real);
+
 global.__NF_W_ED_AddFont = external_define(global.__NF_W_DLL, "FWAddFont", dll_stdcall, ty_real, 3, ty_string, ty_real, ty_real);
 global.__NF_W_ED_AddFontFromFile = external_define(global.__NF_W_DLL, "FWAddFontFromFile", dll_stdcall, ty_real, 3, ty_string, ty_real, ty_real);
 global.__NF_W_ED_DeleteFont = external_define(global.__NF_W_DLL, "FWDeleteFont", dll_stdcall, ty_real, 1, ty_real);
@@ -53,7 +56,7 @@ global.__NF_W_ED_DrawTextColorExt = external_define(global.__NF_W_DLL, "FWDrawTe
 global.__NF_W_ED_DrawTextTransformedColor = external_define(global.__NF_W_DLL, "FWDrawTextTransformedColor", dll_stdcall, ty_real, 4, ty_real, ty_real, ty_string, ty_string);
 global.__NF_W_ED_DrawTextTransformedColorExt = external_define(global.__NF_W_DLL, "FWDrawTextTransformedColorEx", dll_stdcall, ty_real, 4, ty_real, ty_real, ty_string, ty_string);
 
-result = external_call(global.__NF_W_ED_Init, sprite_create_from_screen(0,0,1,1,false,false,0,0));
+result = external_call(global.__NF_W_ED_Init, sprite_create_from_screen(0, 0, 1, 1, false, false, 0, 0));
 
 if(!result){
     show_error("FowWriting ≥ı ºªØ ß∞‹£°", true);
@@ -81,6 +84,9 @@ global.__NF_W_DLL = 0;
 global.__NF_W_ED_Init = 0;
 global.__NF_W_ED_ReleaseCache = 0;
 global.__NF_W_ED_Cleanup = 0;
+
+global.__NF_W_ED_SetEncoding = 0;
+global.__NF_W_ED_SetEncodingEx = 0;
 
 global.__NF_W_ED_AddFont = 0;
 global.__NF_W_ED_AddFontFromFile = 0;
@@ -111,6 +117,24 @@ global.__NF_W_ED_DrawTextColorExt = 0;
 
 global.__NF_W_ED_DrawTextTransformedColor = 0;
 global.__NF_W_ED_DrawTextTransformedColorExt = 0;
+
+
+#define fw_set_encoding
+// boolean fw_set_encoding(string encodeName)
+// Noisyfox's Writing
+// Set the code page using in this plugin.
+// Returns true if success, false otherwise
+
+return external_call(global.__NF_W_ED_SetEncoding, argument0);
+
+
+#define fw_set_encoding_ext
+// boolean fw_set_encoding_ext(uint codePage)
+// Noisyfox's Writing
+// Set the code page using in this plugin.
+// Returns true if success, false otherwise
+
+return external_call(global.__NF_W_ED_SetEncodingExt, argument0);
 
 
 #define fw_add_font
