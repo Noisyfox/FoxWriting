@@ -6,7 +6,6 @@
 #include "FoxFont.h"
 #include "FoxArgs.h"
 #include <cmath>
-#include <atlbase.h>
 #include <unordered_map>
 
 #include <d3d8.h>
@@ -25,6 +24,46 @@ FoxFont* currentFont = NULL;
 int fontCount = 0;
 std::unordered_map<int, FoxFont*> fontMap;
 float lineSpacing = DEFAULT_SEP;
+UINT codePage = CP_ACP;
+
+int iEncodeBufferSize = 0;
+LPWSTR strEncodeBuffer = nullptr;
+
+
+inline LPCWSTR MultibyteToWildChar(LPCSTR input)
+{
+    //计算字符串 string 转成 wchar_t 之后占用的内存字节数
+    int nBufSize = MultiByteToWideChar(codePage, 0, input, -1, nullptr, 0);
+
+    if(nBufSize <= 0)
+    {
+        return nullptr;
+    }
+
+    if (iEncodeBufferSize < nBufSize)
+    {
+        if (strEncodeBuffer)
+        {
+            delete[] strEncodeBuffer;
+            strEncodeBuffer = nullptr;
+        }
+        strEncodeBuffer = new WCHAR[nBufSize];
+        if (strEncodeBuffer)
+        {
+            iEncodeBufferSize = nBufSize;
+        }
+        else
+        {
+            iEncodeBufferSize = 0;
+            return nullptr;
+        }
+    }
+
+    //转化为 unicode 的 WideString
+    int nSize = MultiByteToWideChar(codePage, 0, input, -1, strEncodeBuffer, nBufSize);
+
+    return nSize > 0 ? strEncodeBuffer : nullptr;
+}
 
 void SetSprite(PFontTexture t)
 {
@@ -50,7 +89,7 @@ void SetSprite(PFontTexture t)
     }
 }
 
-void MeasureString(WCHAR* str, Gdiplus::SizeF* size, DOUBLE sep = DEFAULT_SEP)
+void MeasureString(LPCWSTR str, Gdiplus::SizeF* size, DOUBLE sep = DEFAULT_SEP)
 {
     float w = 0, h = 0;
 
@@ -101,7 +140,7 @@ void MeasureString(WCHAR* str, Gdiplus::SizeF* size, DOUBLE sep = DEFAULT_SEP)
     size->Height = h;
 }
 
-void MeasureString(WCHAR* str, Gdiplus::SizeF* size, DOUBLE sep, DOUBLE w)
+void MeasureString(LPCWSTR str, Gdiplus::SizeF* size, DOUBLE sep, DOUBLE w)
 {
     if (sep == -1)
     {
@@ -178,7 +217,7 @@ void MeasureString(WCHAR* str, Gdiplus::SizeF* size, DOUBLE sep, DOUBLE w)
     size->Height = height;
 }
 
-FLOAT DrawLine(WCHAR* str, int start, int end, DOUBLE xOrig, DOUBLE yOrig, DOUBLE x, DOUBLE y, DOUBLE xscale, DOUBLE yscale, DOUBLE angle, DOUBLE alpha, FLOAT measuredWidth, int color1, int color2)
+FLOAT DrawLine(LPCWSTR str, int start, int end, DOUBLE xOrig, DOUBLE yOrig, DOUBLE x, DOUBLE y, DOUBLE xscale, DOUBLE yscale, DOUBLE angle, DOUBLE alpha, FLOAT measuredWidth, int color1, int color2)
 {
     float lineHeight = currentFont->mSizeInWorld;
 
@@ -224,16 +263,19 @@ FLOAT DrawLine(WCHAR* str, int start, int end, DOUBLE xOrig, DOUBLE yOrig, DOUBL
     return lineHeight;
 }
 
-inline DOUBLE DrawTextInner(DOUBLE x, DOUBLE y, CONST CHAR* str, DOUBLE w, DOUBLE xscale, DOUBLE yscale, DOUBLE angle, DOUBLE alpha, int color1, int color2)
+inline DOUBLE DrawTextInner(DOUBLE x, DOUBLE y, LPCSTR str, DOUBLE w, DOUBLE xscale, DOUBLE yscale, DOUBLE angle, DOUBLE alpha, int color1, int color2)
 {
     DOUBLE xOrig = x;
     DOUBLE yOrig = y;
 
-    USES_CONVERSION;
-    LPCWSTR pStr = A2W(str);
+    LPCWSTR pStr = MultibyteToWildChar(str);
+    if (!pStr)
+    {
+        return FALSE;
+    }
 
     Gdiplus::SizeF size;
-    MeasureString((WCHAR*)pStr, &size, lineSpacing, w);
+    MeasureString(pStr, &size, lineSpacing, w);
 
     if (valign == gm::fa_middle)
     {
@@ -257,7 +299,7 @@ inline DOUBLE DrawTextInner(DOUBLE x, DOUBLE y, CONST CHAR* str, DOUBLE w, DOUBL
         WCHAR c = pStr[i];
         if (c == L'\r')
         {
-            y += DrawLine((WCHAR*)pStr, lineStart, i, xOrig, yOrig, x, y, xscale, yscale, angle, alpha, lineWidth, color1, color2);
+            y += DrawLine(pStr, lineStart, i, xOrig, yOrig, x, y, xscale, yscale, angle, alpha, lineWidth, color1, color2);
             y += lineSpacing;
             i++;
             lineStart = i;
@@ -268,7 +310,7 @@ inline DOUBLE DrawTextInner(DOUBLE x, DOUBLE y, CONST CHAR* str, DOUBLE w, DOUBL
         {
             if (!rBefore)
             {
-                y += DrawLine((WCHAR*)pStr, lineStart, i, xOrig, yOrig, x, y, xscale, yscale, angle, alpha, lineWidth, color1, color2);
+                y += DrawLine(pStr, lineStart, i, xOrig, yOrig, x, y, xscale, yscale, angle, alpha, lineWidth, color1, color2);
                 y += lineSpacing;
             }
             i++;
@@ -285,7 +327,7 @@ inline DOUBLE DrawTextInner(DOUBLE x, DOUBLE y, CONST CHAR* str, DOUBLE w, DOUBL
                 float newWidth = lineWidth + t->fontWidth;
                 if (w > 0 && newWidth > w)
                 {
-                    y += DrawLine((WCHAR*)pStr, lineStart, i, xOrig, yOrig, x, y, xscale, yscale, angle, alpha, lineWidth, color1, color2);
+                    y += DrawLine(pStr, lineStart, i, xOrig, yOrig, x, y, xscale, yscale, angle, alpha, lineWidth, color1, color2);
                     y += lineSpacing;
                     lineStart = i;
                     lineWidth = 0;
@@ -301,7 +343,7 @@ inline DOUBLE DrawTextInner(DOUBLE x, DOUBLE y, CONST CHAR* str, DOUBLE w, DOUBL
 
     if (i != lineStart)
     {
-        DrawLine((WCHAR*)pStr, lineStart, i, xOrig, yOrig, x, y, xscale, yscale, angle, alpha, lineWidth, color1, color2);
+        DrawLine(pStr, lineStart, i, xOrig, yOrig, x, y, xscale, yscale, angle, alpha, lineWidth, color1, color2);
     }
 
     return TRUE;
@@ -403,6 +445,23 @@ DOUBLE FWCleanup()
     }
     fontMap.clear();
 
+    if (strEncodeBuffer)
+    {
+        delete[] strEncodeBuffer;
+        strEncodeBuffer = nullptr;
+        iEncodeBufferSize = 0;
+    }
+
+    return TRUE;
+}
+
+DOUBLE FWSetEncoding(LPCSTR CPName)
+{
+    return TRUE;
+}
+
+DOUBLE FWSetEncodingEx(DOUBLE codePage)
+{
     return TRUE;
 }
 
@@ -418,7 +477,7 @@ DOUBLE FWSetVAlign(DOUBLE align)
     return TRUE;
 }
 
-DOUBLE FWDrawText(DOUBLE x, DOUBLE y, CONST CHAR* str)
+DOUBLE FWDrawText(DOUBLE x, DOUBLE y, LPCSTR str)
 {
     if (currentFont == NULL)
     {
@@ -430,7 +489,7 @@ DOUBLE FWDrawText(DOUBLE x, DOUBLE y, CONST CHAR* str)
     return DrawTextInner(x, y, str, 0, 1, 1, 0, alpha, color, color);
 }
 
-DOUBLE FWDrawTextEx(DOUBLE x, DOUBLE y, CONST CHAR* str, CONST CHAR* args)
+DOUBLE FWDrawTextEx(DOUBLE x, DOUBLE y, LPCSTR str, LPCSTR args)
 {
     if (currentFont == NULL)
     {
@@ -450,7 +509,7 @@ DOUBLE FWDrawTextEx(DOUBLE x, DOUBLE y, CONST CHAR* str, CONST CHAR* args)
     return DrawTextInner(x, y, str, w, 1, 1, 0, alpha, color, color);
 }
 
-DOUBLE FWDrawTextTransformed(DOUBLE x, DOUBLE y, CONST CHAR* str, CONST CHAR* args)
+DOUBLE FWDrawTextTransformed(DOUBLE x, DOUBLE y, LPCSTR str, LPCSTR args)
 {
     if (currentFont == NULL)
     {
@@ -472,7 +531,7 @@ DOUBLE FWDrawTextTransformed(DOUBLE x, DOUBLE y, CONST CHAR* str, CONST CHAR* ar
     return DrawTextInner(x, y, str, 0, xscale, yscale, angle, alpha, color, color);
 }
 
-DOUBLE FWDrawTextTransformedEx(DOUBLE x, DOUBLE y, CONST CHAR* str, CONST CHAR* args)
+DOUBLE FWDrawTextTransformedEx(DOUBLE x, DOUBLE y, LPCSTR str, LPCSTR args)
 {
     if (currentFont == NULL)
     {
@@ -495,7 +554,7 @@ DOUBLE FWDrawTextTransformedEx(DOUBLE x, DOUBLE y, CONST CHAR* str, CONST CHAR* 
     return DrawTextInner(x, y, str, w, xscale, yscale, angle, alpha, color, color);
 }
 
-DOUBLE FWDrawTextColor(DOUBLE x, DOUBLE y, CONST CHAR* str, CONST CHAR* args)
+DOUBLE FWDrawTextColor(DOUBLE x, DOUBLE y, LPCSTR str, LPCSTR args)
 {
     if (currentFont == NULL)
     {
@@ -515,7 +574,7 @@ DOUBLE FWDrawTextColor(DOUBLE x, DOUBLE y, CONST CHAR* str, CONST CHAR* args)
     return DrawTextInner(x, y, str, 0, 1, 1, 0, alpha, color1, color2);
 }
 
-DOUBLE FWDrawTextColorEx(DOUBLE x, DOUBLE y, CONST CHAR* str, CONST CHAR* args)
+DOUBLE FWDrawTextColorEx(DOUBLE x, DOUBLE y, LPCSTR str, LPCSTR args)
 {
     if (currentFont == NULL)
     {
@@ -536,7 +595,7 @@ DOUBLE FWDrawTextColorEx(DOUBLE x, DOUBLE y, CONST CHAR* str, CONST CHAR* args)
     return DrawTextInner(x, y, str, w, 1, 1, 0, alpha, color1, color2);
 }
 
-DOUBLE FWDrawTextTransformedColor(DOUBLE x, DOUBLE y, CONST CHAR* str, CONST CHAR* args)
+DOUBLE FWDrawTextTransformedColor(DOUBLE x, DOUBLE y, LPCSTR str, LPCSTR args)
 {
     if (currentFont == NULL)
     {
@@ -559,7 +618,7 @@ DOUBLE FWDrawTextTransformedColor(DOUBLE x, DOUBLE y, CONST CHAR* str, CONST CHA
     return DrawTextInner(x, y, str, 0, xscale, yscale, angle, alpha, color1, color2);
 }
 
-DOUBLE FWDrawTextTransformedColorEx(DOUBLE x, DOUBLE y, CONST CHAR* str, CONST CHAR* args)
+DOUBLE FWDrawTextTransformedColorEx(DOUBLE x, DOUBLE y, LPCSTR str, LPCSTR args)
 {
     if (currentFont == NULL)
     {
@@ -583,18 +642,21 @@ DOUBLE FWDrawTextTransformedColorEx(DOUBLE x, DOUBLE y, CONST CHAR* str, CONST C
     return DrawTextInner(x, y, str, w, xscale, yscale, angle, alpha, color1, color2);
 }
 
-DOUBLE FWAddFont(CONST CHAR* name, DOUBLE pt, DOUBLE style)
+DOUBLE FWAddFont(LPCSTR name, DOUBLE pt, DOUBLE style)
 {
     if (pt <= 0)
     {
         return -1;
     }
 
-    USES_CONVERSION;
-    LPCWSTR pName = A2W(name);
+    LPCWSTR pName = MultibyteToWildChar(name);
+    if (!pName)
+    {
+        return FALSE;
+    }
 
     FoxFont* font = new FoxFont();
-    if (!font->SetFont((WCHAR*)pName, pt, (int)style))
+    if (!font->SetFont(pName, pt, (int)style))
     {
         delete font;
         return -1;
@@ -608,18 +670,21 @@ DOUBLE FWAddFont(CONST CHAR* name, DOUBLE pt, DOUBLE style)
     return index;
 }
 
-DOUBLE FWAddFontFromFile(CONST CHAR* ttf, DOUBLE pt, DOUBLE style)
+DOUBLE FWAddFontFromFile(LPCSTR ttf, DOUBLE pt, DOUBLE style)
 {
     if (pt <= 0)
     {
         return -1;
     }
 
-    USES_CONVERSION;
-    LPCWSTR pName = A2W(ttf);
+    LPCWSTR pName = MultibyteToWildChar(ttf);
+    if (!pName)
+    {
+        return FALSE;
+    }
 
     FoxFont* font = new FoxFont();
-    if (!font->SetFontFile((WCHAR*)pName, pt, (int)style))
+    if (!font->SetFontFile(pName, pt, (int)style))
     {
         delete font;
         return -1;
@@ -702,62 +767,78 @@ DOUBLE FWEnablePixelAlignment(DOUBLE enable)
     return TRUE;
 }
 
-DOUBLE FWStringWidth(CONST CHAR* str)
+DOUBLE FWStringWidth(LPCSTR str)
 {
     if (currentFont == NULL)
     {
         return 0;
     }
-    USES_CONVERSION;
-    LPCWSTR pStr = A2W(str);
+
+    LPCWSTR pStr = MultibyteToWildChar(str);
+    if (!pStr)
+    {
+        return 0;
+    }
 
     Gdiplus::SizeF size;
-    MeasureString((WCHAR*)pStr, &size);
+    MeasureString(pStr, &size);
 
     return size.Width;
 }
 
-DOUBLE FWStringHeight(CONST CHAR* str)
+DOUBLE FWStringHeight(LPCSTR str)
 {
     if (currentFont == NULL)
     {
         return 0;
     }
-    USES_CONVERSION;
-    LPCWSTR pStr = A2W(str);
+
+    LPCWSTR pStr = MultibyteToWildChar(str);
+    if (!pStr)
+    {
+        return 0;
+    }
 
     Gdiplus::SizeF size;
-    MeasureString((WCHAR*)pStr, &size);
+    MeasureString(pStr, &size);
 
     return size.Height;
 }
 
-DOUBLE FWStringWidthEx(CONST CHAR* str, DOUBLE sep, DOUBLE w)
+DOUBLE FWStringWidthEx(LPCSTR str, DOUBLE sep, DOUBLE w)
 {
     if (currentFont == NULL)
     {
         return 0;
     }
-    USES_CONVERSION;
-    LPCWSTR pStr = A2W(str);
+
+    LPCWSTR pStr = MultibyteToWildChar(str);
+    if (!pStr)
+    {
+        return 0;
+    }
 
     Gdiplus::SizeF size;
-    MeasureString((WCHAR*)pStr, &size, sep, w);
+    MeasureString(pStr, &size, sep, w);
 
     return size.Width;
 }
 
-DOUBLE FWStringHeightEx(CONST CHAR* str, DOUBLE sep, DOUBLE w)
+DOUBLE FWStringHeightEx(LPCSTR str, DOUBLE sep, DOUBLE w)
 {
     if (currentFont == NULL)
     {
         return 0;
     }
-    USES_CONVERSION;
-    LPCWSTR pStr = A2W(str);
+
+    LPCWSTR pStr = MultibyteToWildChar(str);
+    if (!pStr)
+    {
+        return 0;
+    }
 
     Gdiplus::SizeF size;
-    MeasureString((WCHAR*)pStr, &size, sep, w);
+    MeasureString(pStr, &size, sep, w);
 
     return size.Height;
 }

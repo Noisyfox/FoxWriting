@@ -7,10 +7,9 @@
 #define __FOXARGS_H__
 
 #include "stdafx.h"
-#include <cstring>
 
 template <int _Size>
-int ParseArgs(CONST CHAR* args, DOUBLE (&dst)[_Size])
+int ParseArgs(LPCSTR args, DOUBLE (&dst)[_Size])
 {
     int len = strlen(args);
     int index = 0;

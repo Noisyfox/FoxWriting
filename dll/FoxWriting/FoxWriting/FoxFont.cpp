@@ -9,7 +9,10 @@ Gdiplus::REAL Point2Pixel(Gdiplus::REAL pt)
     return pt * xdpi / 72.0f;
 }
 
-FoxFont::FoxFont() :mPoint(0.0f, 0.0f)
+FoxFont::FoxFont() :
+    mPoint(0.0f, 0.0f),
+    mSizeInPoint(0),
+    mSizeInWorld(0)
 {
     mFont = NULL;
     mFontCollection = NULL;
@@ -129,7 +132,7 @@ void FoxFont::PreLoad(WCHAR from, WCHAR to)
     }
 }
 
-BOOL FoxFont::SetFont(WCHAR* fontName, DOUBLE size, INT style, const Gdiplus::FontCollection* fontCollection)
+BOOL FoxFont::SetFont(LPCWSTR fontName, DOUBLE size, INT style, const Gdiplus::FontCollection* fontCollection)
 {
     if (mFont)
     {
@@ -199,7 +202,7 @@ BOOL FoxFont::SetFont(WCHAR* fontName, DOUBLE size, INT style, const Gdiplus::Fo
     return TRUE;
 }
 
-BOOL FoxFont::SetFontFile(WCHAR* ttf, DOUBLE size, INT style)
+BOOL FoxFont::SetFontFile(LPCWSTR ttf, DOUBLE size, INT style)
 {
     if (mFont)
     {

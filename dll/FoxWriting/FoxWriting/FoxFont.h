@@ -5,7 +5,6 @@
 #ifndef __FOXFONT_H__
 #define __FOXFONT_H__
 #include "stdafx.h"
-#include <atlbase.h>
 #include "FoxWriting.h"
 #include <vector>
 #include <unordered_map>
@@ -73,8 +72,8 @@ public:
     bool mStroke;
 
     // 用一个字体和相应参数初始化该字体类
-    BOOL SetFont(WCHAR* fontName, DOUBLE size, INT style, const Gdiplus::FontCollection* fontCollection = NULL);
-    BOOL SetFontFile(WCHAR* ttf, DOUBLE size, INT style);
+    BOOL SetFont(LPCWSTR fontName, DOUBLE size, INT style, const Gdiplus::FontCollection* fontCollection = NULL);
+    BOOL SetFontFile(LPCWSTR ttf, DOUBLE size, INT style);
 
     PFontTexture GetCharTexture(WCHAR c);
 
