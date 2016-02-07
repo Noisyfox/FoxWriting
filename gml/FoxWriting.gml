@@ -19,7 +19,7 @@ FontStyleStrikeout  = 8;
 
 global.__NF_W_DLL = "FoxWriting.dll";
 
-global.__NF_W_ED_Init = external_define(global.__NF_W_DLL, "FWInit", dll_stdcall, ty_real, 1, ty_real);
+global.__NF_W_ED_Init = external_define(global.__NF_W_DLL, "FWInit", dll_stdcall, ty_real, 2, ty_real, ty_real);
 global.__NF_W_ED_ReleaseCache = external_define(global.__NF_W_DLL, "FWReleaseCache", dll_stdcall, ty_real, 0);
 global.__NF_W_ED_Cleanup = external_define(global.__NF_W_DLL, "FWCleanup", dll_stdcall, ty_real, 0);
 
@@ -45,18 +45,21 @@ global.__NF_W_ED_SetVAlign = external_define(global.__NF_W_DLL, "FWSetVAlign", d
 global.__NF_W_ED_SetLineSpacing = external_define(global.__NF_W_DLL, "FWSetLineSpacing", dll_stdcall, ty_real, 1, ty_real);
 
 global.__NF_W_ED_DrawText = external_define(global.__NF_W_DLL, "FWDrawText", dll_stdcall, ty_real, 3, ty_real, ty_real, ty_string);
-global.__NF_W_ED_DrawTextExt = external_define(global.__NF_W_DLL, "FWDrawTextEx", dll_stdcall, ty_real, 4, ty_real, ty_real, ty_string, ty_string);
+global.__NF_W_ED_DrawTextExt = external_define(global.__NF_W_DLL, "FWDrawTextEx", dll_stdcall, ty_real, 3, ty_real, ty_real, ty_string);
 
-global.__NF_W_ED_DrawTextTransformed = external_define(global.__NF_W_DLL, "FWDrawTextTransformed", dll_stdcall, ty_real, 4, ty_real, ty_real, ty_string, ty_string);
-global.__NF_W_ED_DrawTextTransformedExt = external_define(global.__NF_W_DLL, "FWDrawTextTransformedEx", dll_stdcall, ty_real, 4, ty_real, ty_real, ty_string, ty_string);
+global.__NF_W_ED_DrawTextTransformed = external_define(global.__NF_W_DLL, "FWDrawTextTransformed", dll_stdcall, ty_real, 3, ty_real, ty_real, ty_string);
+global.__NF_W_ED_DrawTextTransformedExt = external_define(global.__NF_W_DLL, "FWDrawTextTransformedEx", dll_stdcall, ty_real, 3, ty_real, ty_real, ty_string);
 
-global.__NF_W_ED_DrawTextColor = external_define(global.__NF_W_DLL, "FWDrawTextColor", dll_stdcall, ty_real, 4, ty_real, ty_real, ty_string, ty_string);
-global.__NF_W_ED_DrawTextColorExt = external_define(global.__NF_W_DLL, "FWDrawTextColorEx", dll_stdcall, ty_real, 4, ty_real, ty_real, ty_string, ty_string);
+global.__NF_W_ED_DrawTextColor = external_define(global.__NF_W_DLL, "FWDrawTextColor", dll_stdcall, ty_real, 3, ty_real, ty_real, ty_string);
+global.__NF_W_ED_DrawTextColorExt = external_define(global.__NF_W_DLL, "FWDrawTextColorEx", dll_stdcall, ty_real, 3, ty_real, ty_real, ty_string);
 
-global.__NF_W_ED_DrawTextTransformedColor = external_define(global.__NF_W_DLL, "FWDrawTextTransformedColor", dll_stdcall, ty_real, 4, ty_real, ty_real, ty_string, ty_string);
-global.__NF_W_ED_DrawTextTransformedColorExt = external_define(global.__NF_W_DLL, "FWDrawTextTransformedColorEx", dll_stdcall, ty_real, 4, ty_real, ty_real, ty_string, ty_string);
+global.__NF_W_ED_DrawTextTransformedColor = external_define(global.__NF_W_DLL, "FWDrawTextTransformedColor", dll_stdcall, ty_real, 3, ty_real, ty_real, ty_string);
+global.__NF_W_ED_DrawTextTransformedColorExt = external_define(global.__NF_W_DLL, "FWDrawTextTransformedColorEx", dll_stdcall, ty_real, 3, ty_real, ty_real, ty_string);
 
-result = external_call(global.__NF_W_ED_Init, sprite_create_from_screen(0, 0, 1, 1, false, false, 0, 0));
+global.__NF_W_SYS_WorkingSprite = sprite_create_from_screen(0, 0, 1, 1, false, false, 0, 0);
+global.__NF_W_SYS_ArgumentList = ds_list_create();
+
+result = external_call(global.__NF_W_ED_Init, global.__NF_W_SYS_WorkingSprite, global.__NF_W_SYS_ArgumentList);
 
 if(!result){
     show_error("FowWriting ≥ı ºªØ ß∞‹£°", true);
@@ -117,6 +120,12 @@ global.__NF_W_ED_DrawTextColorExt = 0;
 
 global.__NF_W_ED_DrawTextTransformedColor = 0;
 global.__NF_W_ED_DrawTextTransformedColorExt = 0;
+
+sprite_delete(global.__NF_W_SYS_WorkingSprite);
+ds_list_destroy(global.__NF_W_SYS_ArgumentList);
+
+global.__NF_W_SYS_WorkingSprite = 0;
+global.__NF_W_SYS_ArgumentList = 0;
 
 
 #define fw_set_encoding
@@ -301,7 +310,8 @@ return external_call(global.__NF_W_ED_DrawText, argument0, argument1, argument2)
 // Draw text with w specific
 // Returns true if success, false otherwise
 
-return external_call(global.__NF_W_ED_DrawTextExt, argument0, argument1, argument2, _NF_W_CreateArgs(1, argument3));
+_NF_W_CreateArgs(1, argument3);
+return external_call(global.__NF_W_ED_DrawTextExt, argument0, argument1, argument2);
 
 
 #define fw_draw_text_transformed
@@ -310,7 +320,8 @@ return external_call(global.__NF_W_ED_DrawTextExt, argument0, argument1, argumen
 // Draw text
 // Returns true if success, false otherwise
 
-return external_call(global.__NF_W_ED_DrawTextTransformed, argument0, argument1, argument2, _NF_W_CreateArgs(3, argument3, argument4, argument5));
+_NF_W_CreateArgs(3, argument3, argument4, argument5);
+return external_call(global.__NF_W_ED_DrawTextTransformed, argument0, argument1, argument2);
 
 
 #define fw_draw_text_ext_transformed
@@ -319,7 +330,8 @@ return external_call(global.__NF_W_ED_DrawTextTransformed, argument0, argument1,
 // Draw text
 // Returns true if success, false otherwise
 
-return external_call(global.__NF_W_ED_DrawTextTransformedExt, argument0, argument1, argument2, _NF_W_CreateArgs(4, argument3, argument4, argument5, argument6));
+_NF_W_CreateArgs(4, argument3, argument4, argument5, argument6);
+return external_call(global.__NF_W_ED_DrawTextTransformedExt, argument0, argument1, argument2);
 
 
 #define fw_draw_text_color
@@ -328,7 +340,8 @@ return external_call(global.__NF_W_ED_DrawTextTransformedExt, argument0, argumen
 // Draw text
 // Returns true if success, false otherwise
 
-return external_call(global.__NF_W_ED_DrawTextColor, argument0, argument1, argument2, _NF_W_CreateArgs(3, argument3, argument4, argument5));
+_NF_W_CreateArgs(3, argument3, argument4, argument5);
+return external_call(global.__NF_W_ED_DrawTextColor, argument0, argument1, argument2);
 
 
 #define fw_draw_text_ext_color
@@ -337,7 +350,8 @@ return external_call(global.__NF_W_ED_DrawTextColor, argument0, argument1, argum
 // Draw text
 // Returns true if success, false otherwise
 
-return external_call(global.__NF_W_ED_DrawTextColorExt, argument0, argument1, argument2, _NF_W_CreateArgs(4, argument3, argument4, argument5, argument6));
+_NF_W_CreateArgs(4, argument3, argument4, argument5, argument6);
+return external_call(global.__NF_W_ED_DrawTextColorExt, argument0, argument1, argument2);
 
 
 #define fw_draw_text_transformed_color
@@ -346,7 +360,8 @@ return external_call(global.__NF_W_ED_DrawTextColorExt, argument0, argument1, ar
 // Draw text
 // Returns true if success, false otherwise
 
-return external_call(global.__NF_W_ED_DrawTextTransformedColor, argument0, argument1, argument2, _NF_W_CreateArgs(6, argument3, argument4, argument5, argument6, argument7, argument8));
+_NF_W_CreateArgs(6, argument3, argument4, argument5, argument6, argument7, argument8);
+return external_call(global.__NF_W_ED_DrawTextTransformedColor, argument0, argument1, argument2);
 
 
 #define fw_draw_text_ext_transformed_color
@@ -355,7 +370,8 @@ return external_call(global.__NF_W_ED_DrawTextTransformedColor, argument0, argum
 // Draw text
 // Returns true if success, false otherwise
 
-return external_call(global.__NF_W_ED_DrawTextTransformedColorExt, argument0, argument1, argument2, _NF_W_CreateArgs(7, argument3, argument4, argument5, argument6, argument7, argument8, argument9));
+_NF_W_CreateArgs(7, argument3, argument4, argument5, argument6, argument7, argument8, argument9);
+return external_call(global.__NF_W_ED_DrawTextTransformedColorExt, argument0, argument1, argument2);
 
 
 #define _NF_W_CreateArgs
@@ -365,22 +381,17 @@ return external_call(global.__NF_W_ED_DrawTextTransformedColorExt, argument0, ar
 // DO NOT use it manually!
 
 var count;
-var i, first;
-var str;
+var i;
+var list;
 
-count = argument0;
-i = 0;
-str = "";
-first = true;
+list = global.__NF_W_SYS_ArgumentList;
+
+ds_list_clear(list);
+
+count = argument[0];
 
 for(i = 1; i <= count; i+=1){
-    if(!first){
-        str = str + ";";
-    }
-    first = false;
-    str = str + string(argument[i]);
+    ds_list_add(list, argument[i]);
 }
-
-return str;
 
 

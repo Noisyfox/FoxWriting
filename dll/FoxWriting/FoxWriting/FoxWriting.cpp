@@ -375,9 +375,10 @@ void Restore()
     }
 }
 
-DOUBLE FWInit(DOUBLE sprite)
+DOUBLE FWInit(DOUBLE sprite, DOUBLE argList)
 {
     int _spr = (int)sprite;
+    int _argList = (int)argList;
     if (!gmapi->Sprites.Exists(_spr))return FALSE;
 
     int imageCount = gmapi->Sprites[_spr].Subimages.GetCount();
@@ -411,6 +412,8 @@ DOUBLE FWInit(DOUBLE sprite)
     pixelAlign = FALSE;
     halign = gm::fa_left;
     valign = gm::fa_top;
+
+    g_iArgListIndex = _argList;
 
     return TRUE;
 }
@@ -452,6 +455,8 @@ DOUBLE FWCleanup()
         strEncodeBuffer = nullptr;
         iEncodeBufferSize = 0;
     }
+
+    g_iArgListIndex = 0;
 
     return TRUE;
 }
@@ -512,7 +517,7 @@ DOUBLE FWDrawText(DOUBLE x, DOUBLE y, LPCSTR str)
     return DrawTextInner(x, y, str, 0, 1, 1, 0, alpha, color, color);
 }
 
-DOUBLE FWDrawTextEx(DOUBLE x, DOUBLE y, LPCSTR str, LPCSTR args)
+DOUBLE FWDrawTextEx(DOUBLE x, DOUBLE y, LPCSTR str)
 {
     if (currentFont == NULL)
     {
@@ -520,7 +525,7 @@ DOUBLE FWDrawTextEx(DOUBLE x, DOUBLE y, LPCSTR str, LPCSTR args)
     }
 
     DOUBLE argsD[1];
-    if (ParseArgs(args, argsD) < 1)
+    if (ParseArgs(argsD) < 1)
     {
         return FALSE;
     }
@@ -532,7 +537,7 @@ DOUBLE FWDrawTextEx(DOUBLE x, DOUBLE y, LPCSTR str, LPCSTR args)
     return DrawTextInner(x, y, str, w, 1, 1, 0, alpha, color, color);
 }
 
-DOUBLE FWDrawTextTransformed(DOUBLE x, DOUBLE y, LPCSTR str, LPCSTR args)
+DOUBLE FWDrawTextTransformed(DOUBLE x, DOUBLE y, LPCSTR str)
 {
     if (currentFont == NULL)
     {
@@ -540,7 +545,7 @@ DOUBLE FWDrawTextTransformed(DOUBLE x, DOUBLE y, LPCSTR str, LPCSTR args)
     }
 
     DOUBLE argsD[3];
-    if (ParseArgs(args, argsD) < 3)
+    if (ParseArgs(argsD) < 3)
     {
         return FALSE;
     }
@@ -554,7 +559,7 @@ DOUBLE FWDrawTextTransformed(DOUBLE x, DOUBLE y, LPCSTR str, LPCSTR args)
     return DrawTextInner(x, y, str, 0, xscale, yscale, angle, alpha, color, color);
 }
 
-DOUBLE FWDrawTextTransformedEx(DOUBLE x, DOUBLE y, LPCSTR str, LPCSTR args)
+DOUBLE FWDrawTextTransformedEx(DOUBLE x, DOUBLE y, LPCSTR str)
 {
     if (currentFont == NULL)
     {
@@ -562,7 +567,7 @@ DOUBLE FWDrawTextTransformedEx(DOUBLE x, DOUBLE y, LPCSTR str, LPCSTR args)
     }
 
     DOUBLE argsD[4];
-    if (ParseArgs(args, argsD) < 4)
+    if (ParseArgs(argsD) < 4)
     {
         return FALSE;
     }
@@ -577,7 +582,7 @@ DOUBLE FWDrawTextTransformedEx(DOUBLE x, DOUBLE y, LPCSTR str, LPCSTR args)
     return DrawTextInner(x, y, str, w, xscale, yscale, angle, alpha, color, color);
 }
 
-DOUBLE FWDrawTextColor(DOUBLE x, DOUBLE y, LPCSTR str, LPCSTR args)
+DOUBLE FWDrawTextColor(DOUBLE x, DOUBLE y, LPCSTR str)
 {
     if (currentFont == NULL)
     {
@@ -585,7 +590,7 @@ DOUBLE FWDrawTextColor(DOUBLE x, DOUBLE y, LPCSTR str, LPCSTR args)
     }
 
     DOUBLE argsD[3];
-    if (ParseArgs(args, argsD) < 3)
+    if (ParseArgs(argsD) < 3)
     {
         return FALSE;
     }
@@ -597,7 +602,7 @@ DOUBLE FWDrawTextColor(DOUBLE x, DOUBLE y, LPCSTR str, LPCSTR args)
     return DrawTextInner(x, y, str, 0, 1, 1, 0, alpha, color1, color2);
 }
 
-DOUBLE FWDrawTextColorEx(DOUBLE x, DOUBLE y, LPCSTR str, LPCSTR args)
+DOUBLE FWDrawTextColorEx(DOUBLE x, DOUBLE y, LPCSTR str)
 {
     if (currentFont == NULL)
     {
@@ -605,7 +610,7 @@ DOUBLE FWDrawTextColorEx(DOUBLE x, DOUBLE y, LPCSTR str, LPCSTR args)
     }
 
     DOUBLE argsD[4];
-    if (ParseArgs(args, argsD) < 4)
+    if (ParseArgs(argsD) < 4)
     {
         return FALSE;
     }
@@ -618,7 +623,7 @@ DOUBLE FWDrawTextColorEx(DOUBLE x, DOUBLE y, LPCSTR str, LPCSTR args)
     return DrawTextInner(x, y, str, w, 1, 1, 0, alpha, color1, color2);
 }
 
-DOUBLE FWDrawTextTransformedColor(DOUBLE x, DOUBLE y, LPCSTR str, LPCSTR args)
+DOUBLE FWDrawTextTransformedColor(DOUBLE x, DOUBLE y, LPCSTR str)
 {
     if (currentFont == NULL)
     {
@@ -626,7 +631,7 @@ DOUBLE FWDrawTextTransformedColor(DOUBLE x, DOUBLE y, LPCSTR str, LPCSTR args)
     }
 
     DOUBLE argsD[6];
-    if (ParseArgs(args, argsD) < 6)
+    if (ParseArgs(argsD) < 6)
     {
         return FALSE;
     }
@@ -641,7 +646,7 @@ DOUBLE FWDrawTextTransformedColor(DOUBLE x, DOUBLE y, LPCSTR str, LPCSTR args)
     return DrawTextInner(x, y, str, 0, xscale, yscale, angle, alpha, color1, color2);
 }
 
-DOUBLE FWDrawTextTransformedColorEx(DOUBLE x, DOUBLE y, LPCSTR str, LPCSTR args)
+DOUBLE FWDrawTextTransformedColorEx(DOUBLE x, DOUBLE y, LPCSTR str)
 {
     if (currentFont == NULL)
     {
@@ -649,7 +654,7 @@ DOUBLE FWDrawTextTransformedColorEx(DOUBLE x, DOUBLE y, LPCSTR str, LPCSTR args)
     }
 
     DOUBLE argsD[7];
-    if (ParseArgs(args, argsD) < 7)
+    if (ParseArgs(argsD) < 7)
     {
         return FALSE;
     }

@@ -56,6 +56,9 @@
     <ClCompile Include="CodePage.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="FoxArgs.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc">

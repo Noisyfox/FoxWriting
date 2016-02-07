@@ -6,42 +6,28 @@
 #ifndef __FOXARGS_H__
 #define __FOXARGS_H__
 
-#include "stdafx.h"
+extern int g_iArgListIndex;
 
 template <int _Size>
-int ParseArgs(LPCSTR args, DOUBLE (&dst)[_Size])
+int ParseArgs(DOUBLE (&dst)[_Size])
 {
-    int len = strlen(args);
-    int index = 0;
+    int list = g_iArgListIndex;
+    int count = gm::ds_list_size(list);
 
-    char* str = new char[len + 2];
-    if (str == NULL)
+    int max_count = min(_Size, count);
+
+    int i = 0;
+    for (; i < max_count; i++)
     {
-        return 0;
-    }
-
-    strncpy_s(str, (len + 2) * sizeof(char), args, len);
-    str[len] = ';';
-    str[len + 1] = '\0';
-
-    len++;
-
-    char* strP = str;
-    for (int i = 0; i < len && index < _Size; i++)
-    {
-        if (str[i] == ';')
+        auto value = gm::ds_list_find_value(list, i);
+        if(value.IsString())
         {
-            str[i] = '\0';
-            double v = atof(strP);
-            strP = &str[i + 1];
-            dst[index] = v;
-            index++;
+            break;
         }
+        dst[i] = value.real();
     }
 
-    delete[] str;
-
-    return index;
+    return i;
 }
 
 #endif

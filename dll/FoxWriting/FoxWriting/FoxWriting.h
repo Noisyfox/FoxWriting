@@ -31,7 +31,7 @@ extern FWorkbench workbench;
 extern "C"
 {
     // 初始化 FowWriting, sprite 是工作精灵，所有绘制都在该精灵上完成
-    FOXWRITING_API DOUBLE FWInit(DOUBLE sprite);
+    FOXWRITING_API DOUBLE FWInit(DOUBLE sprite, DOUBLE argList);
     FOXWRITING_API DOUBLE FWReleaseCache();
     FOXWRITING_API DOUBLE FWCleanup();
     // 设置多线程文字绘制
@@ -63,16 +63,16 @@ extern "C"
     FOXWRITING_API DOUBLE FWStringHeightEx(LPCSTR str, DOUBLE sep, DOUBLE w);
     // 文字绘制
     FOXWRITING_API DOUBLE FWDrawText(DOUBLE x, DOUBLE y, LPCSTR str);
-    FOXWRITING_API DOUBLE FWDrawTextEx(DOUBLE x, DOUBLE y, LPCSTR str, LPCSTR args);
+    FOXWRITING_API DOUBLE FWDrawTextEx(DOUBLE x, DOUBLE y, LPCSTR str);
 
-    FOXWRITING_API DOUBLE FWDrawTextTransformed(DOUBLE x, DOUBLE y, LPCSTR str, LPCSTR args);
-    FOXWRITING_API DOUBLE FWDrawTextTransformedEx(DOUBLE x, DOUBLE y, LPCSTR str, LPCSTR args);
+    FOXWRITING_API DOUBLE FWDrawTextTransformed(DOUBLE x, DOUBLE y, LPCSTR str);
+    FOXWRITING_API DOUBLE FWDrawTextTransformedEx(DOUBLE x, DOUBLE y, LPCSTR str);
 
-    FOXWRITING_API DOUBLE FWDrawTextColor(DOUBLE x, DOUBLE y, LPCSTR str, LPCSTR args);
-    FOXWRITING_API DOUBLE FWDrawTextColorEx(DOUBLE x, DOUBLE y, LPCSTR str, LPCSTR args);
+    FOXWRITING_API DOUBLE FWDrawTextColor(DOUBLE x, DOUBLE y, LPCSTR str);
+    FOXWRITING_API DOUBLE FWDrawTextColorEx(DOUBLE x, DOUBLE y, LPCSTR str);
 
-    FOXWRITING_API DOUBLE FWDrawTextTransformedColor(DOUBLE x, DOUBLE y, LPCSTR str, LPCSTR args);
-    FOXWRITING_API DOUBLE FWDrawTextTransformedColorEx(DOUBLE x, DOUBLE y, LPCSTR str, LPCSTR args);
+    FOXWRITING_API DOUBLE FWDrawTextTransformedColor(DOUBLE x, DOUBLE y, LPCSTR str);
+    FOXWRITING_API DOUBLE FWDrawTextTransformedColorEx(DOUBLE x, DOUBLE y, LPCSTR str);
 };
 
 #endif

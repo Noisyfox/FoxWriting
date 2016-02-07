@@ -1,6 +1,4 @@
 #include "stdafx.h"
+#include "FoxArgs.h"
 
-template<int max>
-int ParseArgs(CONST CHAR* args, DOUBLE dst[max]){
-
-}
+int g_iArgListIndex = 0;
