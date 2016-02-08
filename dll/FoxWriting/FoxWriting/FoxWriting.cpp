@@ -30,6 +30,8 @@ UINT currentCodePage = CP_ACP;
 int iEncodeBufferSize = 0;
 LPWSTR strEncodeBuffer = nullptr;
 
+MeasuredString g_measuredString;
+
 
 inline LPCWSTR MultibyteToWildChar(LPCSTR input)
 {
@@ -90,26 +92,37 @@ void SetSprite(PFontTexture t)
     }
 }
 
-void MeasureString(LPCWSTR str, Gdiplus::SizeF* size, DOUBLE sep = DEFAULT_SEP)
+inline void AddMeasuredLine(int start, int end, float w, float h)
+{
+    g_measuredString.lines.push_back(MeasuredLine(start, end, w, h));
+}
+
+void MeasureString(LPCWSTR str, DOUBLE sep = DEFAULT_SEP)
 {
     float w = 0, h = 0;
 
     float lineHMax = currentFont->mSizeInWorld;
     float lineW = 0;
-    int length = wcslen(str);
     bool rBefore = false;
+    int lineStart = 0;
+    int i;
+    WCHAR c;
 
-    for (int i = 0; i < length; i++)
+    g_measuredString.lines.clear();
+
+    for (i = 0, c = str[0]; c != L'\0'; i++, c = str[i])
     {
-        WCHAR c = str[i];
         if (c == L'\r')
         {
             rBefore = true;
             h += lineHMax;
             h += sep;
             w = max(w, lineW);
+            AddMeasuredLine(lineStart, i, lineW, lineHMax);
+
             lineHMax = currentFont->mSizeInWorld;
             lineW = 0;
+            lineStart = i + 1;
         }
         else if (c == L'\n')
         {
@@ -118,10 +131,13 @@ void MeasureString(LPCWSTR str, Gdiplus::SizeF* size, DOUBLE sep = DEFAULT_SEP)
                 h += lineHMax;
                 h += sep;
                 w = max(w, lineW);
+                AddMeasuredLine(lineStart, i, lineW, lineHMax);
+
                 lineHMax = currentFont->mSizeInWorld;
                 lineW = 0;
             }
             rBefore = false;
+            lineStart = i + 1;
         }
         else
         {
@@ -136,12 +152,13 @@ void MeasureString(LPCWSTR str, Gdiplus::SizeF* size, DOUBLE sep = DEFAULT_SEP)
     }
     h += lineHMax;
     w = max(w, lineW);
+    AddMeasuredLine(lineStart, i, lineW, lineHMax);
 
-    size->Width = w;
-    size->Height = h;
+    g_measuredString.width = w;
+    g_measuredString.height = h;
 }
 
-void MeasureString(LPCWSTR str, Gdiplus::SizeF* size, DOUBLE sep, DOUBLE w)
+void MeasureString(LPCWSTR str, DOUBLE sep, DOUBLE w)
 {
     if (sep == -1)
     {
@@ -149,43 +166,49 @@ void MeasureString(LPCWSTR str, Gdiplus::SizeF* size, DOUBLE sep, DOUBLE w)
     }
     if (w <= 0)
     {
-        MeasureString(str, size, sep);
+        MeasureString(str, sep);
         return;
     }
 
     float width = 0, height = 0;
 
-    int length = wcslen(str);
-
     float currentLineWidth = 0;
     float lineHMax = currentFont->mSizeInWorld;
     bool rBefore = false;
+    int lineStart = 0;
+    int i;
+    WCHAR c;
 
-    for (int i = 0; i < length; i++)
+    g_measuredString.lines.clear();
+
+    for (i = 0, c = str[0]; c != L'\0'; i++, c = str[i])
     {
-        WCHAR c = str[i];
         if (c == L'\r')
         {
             rBefore = true;
-            width = max(width, currentLineWidth);
-            height += sep;
             height += lineHMax;
+            height += sep;
+            width = max(width, currentLineWidth);
+            AddMeasuredLine(lineStart, i, currentLineWidth, lineHMax);
 
             lineHMax = currentFont->mSizeInWorld;
             currentLineWidth = 0;
+            lineStart = i + 1;
         }
         else if (c == L'\n')
         {
             if (!rBefore)
             {
-                width = max(width, currentLineWidth);
                 height += sep;
                 height += lineHMax;
+                width = max(width, currentLineWidth);
+                AddMeasuredLine(lineStart, i, currentLineWidth, lineHMax);
 
                 lineHMax = currentFont->mSizeInWorld;
                 currentLineWidth = 0;
             }
             rBefore = false;
+            lineStart = i + 1;
         }
         else
         {
@@ -196,12 +219,14 @@ void MeasureString(LPCWSTR str, Gdiplus::SizeF* size, DOUBLE sep, DOUBLE w)
                 float newWidth = currentLineWidth + t->fontWidth;
                 if (newWidth > w)
                 { // »»ÐÐ
-                    width = max(width, currentLineWidth);
                     height += sep;
                     height += lineHMax;
+                    width = max(width, currentLineWidth);
+                    AddMeasuredLine(lineStart, i, currentLineWidth, lineHMax);
 
                     lineHMax = max(currentFont->mSizeInWorld, t->fontHeight);
                     currentLineWidth = t->fontWidth;
+                    lineStart = i;
                 }
                 else
                 {
@@ -213,15 +238,14 @@ void MeasureString(LPCWSTR str, Gdiplus::SizeF* size, DOUBLE sep, DOUBLE w)
     }
     width = max(width, currentLineWidth);
     height += lineHMax;
+    AddMeasuredLine(lineStart, i, currentLineWidth, lineHMax);
 
-    size->Width = width;
-    size->Height = height;
+    g_measuredString.width = width;
+    g_measuredString.height = height;
 }
 
-FLOAT DrawLine(LPCWSTR str, int start, int end, DOUBLE xOrig, DOUBLE yOrig, DOUBLE x, DOUBLE y, DOUBLE xscale, DOUBLE yscale, DOUBLE angle, DOUBLE alpha, FLOAT measuredWidth, int color1, int color2)
+void DrawLine(LPCWSTR str, int start, int end, DOUBLE xOrig, DOUBLE yOrig, DOUBLE x, DOUBLE y, DOUBLE xscale, DOUBLE yscale, DOUBLE angle, DOUBLE alpha, FLOAT measuredWidth, int color1, int color2)
 {
-    float lineHeight = currentFont->mSizeInWorld;
-
     if (halign == gm::fa_center)
     {
         x -= measuredWidth / 2;
@@ -234,7 +258,7 @@ FLOAT DrawLine(LPCWSTR str, int start, int end, DOUBLE xOrig, DOUBLE yOrig, DOUB
     for (int i = start; i < end; i++)
     {
         PFontTexture t = currentFont->GetCharTexture(str[i]);
-        if (t != NULL)
+        if (t)
         {
             SetSprite(t);
             double xOffset = x - xOrig - t->fontXOffset + currentFont->mXOffset;
@@ -257,11 +281,8 @@ FLOAT DrawLine(LPCWSTR str, int start, int end, DOUBLE xOrig, DOUBLE yOrig, DOUB
                 gm::draw_sprite_general(workbench.spriteIndex, 0, 0, 0, t->imageWidth, t->imageHeight, xOrig + xOffset, yOrig + yOffset, xscale, yscale, angle, color1, color1, color2, color2, alpha);
             }
             x += t->fontWidth;
-            lineHeight = max(lineHeight, t->fontHeight);
         }
     }
-
-    return lineHeight;
 }
 
 inline DOUBLE DrawTextInner(DOUBLE x, DOUBLE y, LPCSTR str, DOUBLE w, DOUBLE xscale, DOUBLE yscale, DOUBLE angle, DOUBLE alpha, int color1, int color2)
@@ -275,76 +296,29 @@ inline DOUBLE DrawTextInner(DOUBLE x, DOUBLE y, LPCSTR str, DOUBLE w, DOUBLE xsc
         return FALSE;
     }
 
-    Gdiplus::SizeF size;
-    MeasureString(pStr, &size, lineSpacing, w);
+    MeasureString(pStr, lineSpacing, w);
+
+    auto& measuredString = g_measuredString;
 
     if (valign == gm::fa_middle)
     {
-        y -= size.Height / 2;
+        y -= measuredString.height / 2;
     }
     else if (valign == gm::fa_bottom)
     {
-        y -= size.Height;
+        y -= measuredString.width;
     }
 
-    //int color = gm::draw_get_color();
-
-    int length = wcslen(pStr);
-
-    int i = 0;
-    int lineStart = 0;
-    float lineWidth = 0;
-    bool rBefore = false;
-    while (i < length)
+    for (auto& l : measuredString.lines)
     {
-        WCHAR c = pStr[i];
-        if (c == L'\r')
+        int s = l.start;
+        int e = l.end;
+        if(s != e)
         {
-            y += DrawLine(pStr, lineStart, i, xOrig, yOrig, x, y, xscale, yscale, angle, alpha, lineWidth, color1, color2);
-            y += lineSpacing;
-            i++;
-            lineStart = i;
-            lineWidth = 0;
-            rBefore = true;
+            DrawLine(pStr, s, e, xOrig, yOrig, x, y, xscale, yscale, angle, alpha, l.width, color1, color2);
         }
-        else if (c == L'\n')
-        {
-            if (!rBefore)
-            {
-                y += DrawLine(pStr, lineStart, i, xOrig, yOrig, x, y, xscale, yscale, angle, alpha, lineWidth, color1, color2);
-                y += lineSpacing;
-            }
-            i++;
-            lineStart = i;
-            lineWidth = 0;
-            rBefore = false;
-        }
-        else
-        {
-            rBefore = false;
-            PFontTexture t = currentFont->GetCharTexture(c);
-            if (t != NULL)
-            {
-                float newWidth = lineWidth + t->fontWidth;
-                if (w > 0 && newWidth > w)
-                {
-                    y += DrawLine(pStr, lineStart, i, xOrig, yOrig, x, y, xscale, yscale, angle, alpha, lineWidth, color1, color2);
-                    y += lineSpacing;
-                    lineStart = i;
-                    lineWidth = 0;
-                }
-                else
-                {
-                    lineWidth = newWidth;
-                    i++;
-                }
-            }
-        }
-    }
-
-    if (i != lineStart)
-    {
-        DrawLine(pStr, lineStart, i, xOrig, yOrig, x, y, xscale, yscale, angle, alpha, lineWidth, color1, color2);
+        y += l.height;
+        y += lineSpacing;
     }
 
     return TRUE;
@@ -808,10 +782,9 @@ DOUBLE FWStringWidth(LPCSTR str)
         return 0;
     }
 
-    Gdiplus::SizeF size;
-    MeasureString(pStr, &size);
+    MeasureString(pStr);
 
-    return size.Width;
+    return g_measuredString.width;
 }
 
 DOUBLE FWStringHeight(LPCSTR str)
@@ -827,10 +800,9 @@ DOUBLE FWStringHeight(LPCSTR str)
         return 0;
     }
 
-    Gdiplus::SizeF size;
-    MeasureString(pStr, &size);
+    MeasureString(pStr);
 
-    return size.Height;
+    return g_measuredString.height;
 }
 
 DOUBLE FWStringWidthEx(LPCSTR str, DOUBLE sep, DOUBLE w)
@@ -846,10 +818,9 @@ DOUBLE FWStringWidthEx(LPCSTR str, DOUBLE sep, DOUBLE w)
         return 0;
     }
 
-    Gdiplus::SizeF size;
-    MeasureString(pStr, &size, sep, w);
+    MeasureString(pStr, sep, w);
 
-    return size.Width;
+    return g_measuredString.width;
 }
 
 DOUBLE FWStringHeightEx(LPCSTR str, DOUBLE sep, DOUBLE w)
@@ -865,10 +836,9 @@ DOUBLE FWStringHeightEx(LPCSTR str, DOUBLE sep, DOUBLE w)
         return 0;
     }
 
-    Gdiplus::SizeF size;
-    MeasureString(pStr, &size, sep, w);
+    MeasureString(pStr, sep, w);
 
-    return size.Height;
+    return g_measuredString.height;
 }
 
 DOUBLE FWSetLineSpacing(DOUBLE sep)

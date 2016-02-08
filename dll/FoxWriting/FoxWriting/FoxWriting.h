@@ -7,6 +7,8 @@
 #ifndef __FOXWRITING_H__
 #define __FOXWRITING_H__
 
+#include <vector>
+
 typedef struct
 {
     gm::GMTEXTURE backupTexture;
@@ -21,6 +23,25 @@ typedef struct
     int spriteIndex;
     SpriteBackup sprBackup;
 } FWorkbench;
+
+typedef struct _MesauredLine
+{
+    int start;
+    int end;
+    float width;
+    float height;
+
+    _MesauredLine(int s, int e, float w, float h): start(s), end(e), width(w), height(h)
+    {
+    }
+} MeasuredLine;
+
+typedef struct
+{
+    float width;
+    float height;
+    std::vector<MeasuredLine> lines;
+} MeasuredString;
 
 extern gm::CGMAPI* gmapi;
 extern ULONG_PTR m_gdiplusToken;
